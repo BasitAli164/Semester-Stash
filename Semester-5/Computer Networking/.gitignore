@@ -1,0 +1,39 @@
+# Ignore Packet Tracer backup and autosave files
+*.bak
+*.autosave
+
+# Ignore Cisco Packet Tracer temp files (optional)
+*.tmp
+*.temp
+
+# Ignore system files (Windows)
+Thumbs.db
+desktop.ini
+
+# Ignore system files (macOS)
+.DS_Store
+
+# Ignore VS Code and other IDE/editor settings
+.vscode/
+.idea/
+*.code-workspace
+
+# Ignore compiled binaries or object files (if any scripting is used)
+*.exe
+*.out
+*.o
+
+# Ignore logs and environment files
+*.log
+.env
+.env.*
+
+# Ignore zip or archive files
+*.zip
+*.rar
+*.tar.gz
+
+# Optional: ignore folders for test results or scratch work
+__pycache__/
+test-output/
+scratch/

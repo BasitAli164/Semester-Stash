@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Shopping Website</title>
+    <!-- Bootstrap 3.4.1 CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <style>
+        *{
+            scroll-behavior: smooth;
+        }
+        body {
+            padding-top: 50px;
+        }
+        .carousel-inner > .item > img {
+            width: 100%;
+            height: 400px;
+        }
+        footer {
+            background-color: #f1f1f1;
+            padding: 20px 0;
+            text-align: center;
+        }
+        .navbar-nav {
+            float: none;
+            text-align: center;
+        }
+        .navbar-nav > li {
+            float: none;
+            display: inline-block;
+        }
+        .navbar-left {
+            float: left ;
+        }
+        .navbar-right {
+            float: right ;
+        }
+        /* Hover effect for navbar links */
+        .navbar-nav > li > a:hover, .navbar-left > li > a:hover {
+            background-color: #f1f1f1;
+            color: #000;
+        }
+        .navbar-form .form-group .form-control {
+            width: 200px;
+        }
+        .btn-search {
+            background-color: #fff;
+            border: none;
+        }
+        .btn-search:hover {
+            background-color: #e7e7e7;
+        }
+        /* Margin between navbar and carousel */
+        #myCarousel {
+            margin-top: 20px;
+        }
+        /* Product Description */
+        .product-description {
+            padding: 20px;
+            background-color: #f9f9f9;
+            text-align: center;
+        }
+        .caption{
+            text-align: center;
+        }
+        .caption button:hover{
+            background-color: darkgray;
+            border-radius: 50px;
+            font-weight: bold;
+        }
+      
+  
+        
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#"><img src="logo.png" width="100px" ></a>
+        </div>
+        <div class="collapse navbar-collapse">
+            <!-- Centered Links -->
+            <ul class="nav navbar-nav navbar-center" id="list">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#product">Products</a></li>
+                <li><a href="#cart">Cart</a></li>
+            </ul>
+            
+            <!-- Right Aligned Search Bar -->
+            <form class="navbar-form navbar-right" role="search">
+                <div class="form-group">
+                    <input type="text" class="form-control" placeholder="Search products">
+                </div>
+                <!-- Replace button with icon -->
+                <button type="submit" class="btn btn-search">
+                    <span class="glyphicon glyphicon-search"></span>
+                </button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<!-- Carousel (Product Slider) -->
+<div id="home" class="carousel slide" data-ride="carousel">
+    <ol class="carousel-indicators">
+        <li data-target="#myCarousel" data-slide-to="0" ></li>
+        <li data-target="#myCarousel" data-slide-to="1" class="active"></li>
+        <li data-target="#myCarousel" data-slide-to="2"></li>
+    </ol>
+    <div class="carousel-inner">
+        <div class="item ">
+            <img src="bg1.jpg" alt="Product 1" width="100px">
+            <div class="carousel-caption">
+                <h3>Ladar Shoes</h3>
+                <p>Best quality product</p>
+            </div>
+        </div>
+        <div class="item active">
+            <img src="product2.avif" alt="Product 2">
+            <div class="carousel-caption">
+                <h3>Glider Shoes</h3>
+                <p>Affordable price</p>
+            </div>
+        </div>
+        <div class="item">
+            <img src="product1.avif" alt="Product 3">
+            <div class="carousel-caption">
+                <h3>Runner Shoes</h3>
+                <p>Limited edition</p>
+            </div>
+        </div>
+    </div>
+    <a class="left carousel-control" href="#myCarousel" data-slide="prev">
+        <span class="glyphicon glyphicon-chevron-left"></span>
+    </a>
+    <a class="right carousel-control" href="#myCarousel" data-slide="next">
+        <span class="glyphicon glyphicon-chevron-right"></span>
+    </a>
+</div>
+
+<!-- Product Description -->
+<div  class="product-description">
+    <h1>Discover Our Latest Products</h1>
+    <p>Explore our wide range of high-quality products. We offer the best selection of goods, for <a href="#">Men</a> and <a href="#">Women</a>. Whether you're looking for the latest trends or timeless classics, we have something for everyone. Our commitment to quality ensures that you get the best value for your money.</p>
+</div>
+
+<!-- Product Grid -->
+<div id="product" class="container">
+    <h1 style="text-align: center;">Our Products</h1>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="thumbnail">
+                <img src="product13.avif" alt="Hush Puppies Classic Loafers">
+                <div class="caption">
+                    <h4>Hush Puppies Classic Loafers</h4>
+                    <p>Price: PKR 4,500</p>
+                    <button class="btn btn-primary">Add to Cart</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="thumbnail">
+                <img src="product4.avif" alt="Servis Comfort Sneakers">
+                <div class="caption">
+                    <h4>Servis Comfort Sneakers</h4>
+                    <p>Price: PKR 3,200</p>
+                    <button class="btn btn-primary">Add to Cart</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="thumbnail">
+                <img src="product5.avif" alt="Borjan Formal Oxfords">
+                <div class="caption">
+                    <h4>Borjan Formal Oxfords</h4>
+                    <p>Price: PKR 5,800</p>
+                    <button class="btn btn-primary">Add to Cart</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="thumbnail">
+                <img src="product6.avif" alt="Eiden Sports Running Shoes">
+                <div class="caption">
+                    <h4>Eiden Sports Running Shoes</h4>
+                    <p>Price: PKR 3,800</p>
+                    <button class="btn btn-primary">Add to Cart</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="thumbnail">
+                <img src="product7.avif" alt="Shoe Mart Casual Slip-Ons">
+                <div class="caption">
+                    <h4>Shoe Mart Casual Slip-Ons</h4>
+                    <p>Price: PKR 2,500</p>
+                    <button class="btn btn-primary">Add to Cart</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="thumbnail">
+                <img src="product8.avif" alt="Ecco Leather Sandals">
+                <div class="caption">
+                    <h4>Ecco Leather Sandals</h4>
+                    <p>Price: PKR 6,200</p>
+                    <button class="btn btn-primary">Add to Cart</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="thumbnail">
+                <img src="product9.avif" alt="J. Casual Shoes">
+                <div class="caption">
+                    <h4>J. Casual Shoes</h4>
+                    <p>Price: PKR 4,000</p>
+                    <button class="btn btn-primary">Add to Cart</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="thumbnail">
+                <img src="product10.avif" alt="Almirah Formal Dress Shoes">
+                <div class="caption">
+                    <h4>Almirah Formal Dress Shoes</h4>
+                    <p>Price: PKR 5,200</p>
+                    <button class="btn btn-primary">Add to Cart</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="thumbnail">
+                <img src="product11.avif" alt="Hush Puppies Casual Moccasins">
+                <div class="caption">
+                    <h4>Hush Puppies Casual Moccasins</h4>
+                    <p>Price: PKR 4,800</p>
+                    <button class="btn btn-primary">Add to Cart</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="thumbnail">
+                <img src="product12.avif" alt="Metro Shoes Trendy Flats">
+                <div class="caption">
+                    <h4>Metro Shoes Trendy Flats</h4>
+                    <p>Price: PKR 2,800</p>
+                    <button class="btn btn-primary">Add to Cart</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="thumbnail">
+                <img src="product14.avif" alt="Metro Shoes Trendy Flats">
+                <div class="caption">
+                    <h4>Hiking</h4>
+                    <p>Price: PKR 7,000</p>
+                    <button class="btn btn-primary">Add to Cart</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="thumbnail">
+                <img src="product15.avif" alt="Metro Shoes Trendy Flats">
+                <div class="caption" >
+                    <h4>Slip-On</h4>
+                    <p>Price: PKR 3,600</p>
+                    <button class="btn btn-primary">Add to Cart</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- Cart Section -->
+<div id="cart" class="container">
+    <h2 style="text-align: center;">Your Cart</h2>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Total</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Hush Puppies Classic Loafers</td>
+                <td>1</td>
+                <td>4,500</td>
+                <td>4,500</td>
+                <td><button class="btn btn-danger">Remove</button></td>
+            </tr>
+            <tr>
+                <td>Slip-On</td>
+                <td>2</td>
+                <td> 3,600</td>
+                <td> 7,200</td>
+                <td><button class="btn btn-danger">Remove</button></td>
+            </tr>
+            <tr>
+                <td>Hiking</td>
+                <td>2</td>
+                <td> 7,000</td>
+                <td> 14,000</td>
+                <td><button class="btn btn-danger">Remove</button></td>
+            </tr>
+            <tr>
+                <td>Metro Shoes Trendy Flats</td>
+                <td>3</td>
+                <td> 2,800</td>
+                <td> 8,400</td>
+                <td><button class="btn btn-danger">Remove</button></td>
+            </tr>
+            <tr>
+                <td>Almirah Formal Dress Shoes</td>
+                <td>2</td>
+                <td> 5,200</td>
+                <td> 10,400</td>
+                <td><button class="btn btn-danger">Remove</button></td>
+            </tr>
+        </tbody>
+    </table>
+  
+</div>
+
+<!-- Footer -->
+<footer class="container-fluid">
+    <div class="row">
+        <div class="col-md-4">
+            <h4>Contact Us</h4>
+            <p>Address: Skardu, Pakistan</p>
+            <p>Phone: +92 3475495500</p>
+        </div>
+        <div class="col-md-4">
+            <h4>Follow Us</h4>
+            <a href="www.facebook.come">Facebook</a> | <a href="www.twitter.com">Twitter</a> | <a href="www.instagram.com">Instagram</a>
+        </div>
+        <div class="col-md-4">
+            <h4>Quick Links</h4>
+            <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a>
+        </div>
+    </div>
+</footer>
+
+<!-- Bootstrap 3.4.1 JS and jQuery -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+</body>
+</html>
