@@ -1,6 +1,6 @@
 # Semester-Stash
 🎓 My University Journey
-A growing archive of my learning, teaching, lab work, and development experiences as an undergraduate student in Computer Science.
+A growing archive of my learning, teaching, lab work, and development experiences as an undergraduate student in Computer Science .
 
 📂 Repository Purpose
 This repository is dedicated to my ongoing academic journey — where I learn, teach, write, and build everything from lab manuals to practicals and semester projects.
