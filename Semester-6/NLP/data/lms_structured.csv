@@ -1,0 +1,271 @@
+﻿Phase,Question,Person,Answer
+Requirements Analysis,"Q1: How were the initial requirements for the LMS gathered? Was there any formal requirement-gathering process like interviews, surveys, or workshops?",Imtiaz Ahmed,"Requirements were gathered by exploring open-source LMS platforms (e.g., Moodle) and consulting IT team members."
+Requirements Analysis,"Q1: How were the initial requirements for the LMS gathered? Was there any formal requirement-gathering process like interviews, surveys, or workshops?",Javid Hussain,"Requirements were gathered through discussion-based sessions initiated by Dr. Irshad Hussain with a committee of faculty members, IT staff, and an intern."
+Requirements Analysis,"Q1: How were the initial requirements for the LMS gathered? Was there any formal requirement-gathering process like interviews, surveys, or workshops?",Tahawur Abbas,"Requirements were collected via student interviews and admin meetings, with formal interviews and meetings conducted."
+Requirements Analysis,"Q1: How were the initial requirements for the LMS gathered? Was there any formal requirement-gathering process like interviews, surveys, or workshops?",Amjad,"Requirements were gathered through comprehensive requirement analysis sessions, including interviews and regular meetings with stakeholders."
+Requirements Analysis,"Q1: How were the initial requirements for the LMS gathered? Was there any formal requirement-gathering process like interviews, surveys, or workshops?",Asad Ali,Requirements were gathered through meetings; formal documentation was not prepared.
+Requirements Analysis,"Q1: How were the initial requirements for the LMS gathered? Was there any formal requirement-gathering process like interviews, surveys, or workshops?",Muhammad Askari,Requirements were gathered through informal stakeholder meetings rather than formal documentation processes.
+Requirements Analysis,"Q2: Were stakeholders such as faculty, students, or admin staff involved during the planning stage?",Imtiaz Ahmed,"Yes, students (Amjad, Tahawar, Abida) and some faculty members were involved. Open-source solutions were also researched for timetable management."
+Requirements Analysis,"Q2: Were stakeholders such as faculty, students, or admin staff involved during the planning stage?",Javid Hussain,"Yes, faculty members, IT faculty, and an intern were involved."
+Requirements Analysis,"Q2: Were stakeholders such as faculty, students, or admin staff involved during the planning stage?",Tahawur Abbas,"Yes, students and admins were involved in planning."
+Requirements Analysis,"Q2: Were stakeholders such as faculty, students, or admin staff involved during the planning stage?",Amjad,"Yes, feedback from faculty and students was continuously gathered and integrated."
+Requirements Analysis,"Q2: Were stakeholders such as faculty, students, or admin staff involved during the planning stage?",Asad Ali,"Yes, faculty members and students' requirements were considered during planning."
+Requirements Analysis,"Q2: Were stakeholders such as faculty, students, or admin staff involved during the planning stage?",Muhammad Askari,"Yes, faculty and IT staff were involved throughout the planning stage."
+Requirements Analysis,Q3: Were there any documented functional and non-functional requirements? Can we see them?,Imtiaz Ahmed,No - formal requirement documents are not available. Documentation will be prepared for new features as the system migrates to an API-based CMS.
+Requirements Analysis,Q3: Were there any documented functional and non-functional requirements? Can we see them?,Javid Hussain,No formal documentation exists; requirements were captured through discussions.
+Requirements Analysis,Q3: Were there any documented functional and non-functional requirements? Can we see them?,Tahawur Abbas,Limited documentation exists; requirements were primarily captured verbally and via meeting notes.
+Requirements Analysis,Q3: Were there any documented functional and non-functional requirements? Can we see them?,Amjad,Thorough documentation was maintained throughout the project's lifecycle.
+Requirements Analysis,Q3: Were there any documented functional and non-functional requirements? Can we see them?,Asad Ali,"No, there is no formal documentation."
+Requirements Analysis,Q3: Were there any documented functional and non-functional requirements? Can we see them?,Muhammad Askari,No comprehensive SRS document was created; requirements were tracked informally.
+Requirements Analysis,Q4: What challenges were faced during requirement collection?,Imtiaz Ahmed,Multiple challenges were encountered during requirement collection.
+Requirements Analysis,Q4: What challenges were faced during requirement collection?,Javid Hussain,Many users had limited computer experience; training sessions were conducted to mitigate this.
+Requirements Analysis,Q4: What challenges were faced during requirement collection?,Tahawur Abbas,"Lack of clarity in requirements, departmental needs not fully captured, and limited time for planning were key challenges."
+Requirements Analysis,Q4: What challenges were faced during requirement collection?,Amjad,Absence of a formal team leader and limited development time posed challenges.
+Requirements Analysis,Q4: What challenges were faced during requirement collection?,Asad Ali,Various challenges were faced that required logical handling during requirement collection.
+Requirements Analysis,Q4: What challenges were faced during requirement collection?,Muhammad Askari,Challenges arose in tracking requirements and managing scope due to lack of formal documentation.
+Requirements Analysis,Q5: How were conflicting requirements between departments handled during planning?,Imtiaz Ahmed,Reconciliation issues (especially with accounts) were addressed using API-based solutions.
+Requirements Analysis,Q5: How were conflicting requirements between departments handled during planning?,Javid Hussain,Conflicting requirements were managed through informal discussions with faculty and IT staff.
+Requirements Analysis,Q5: How were conflicting requirements between departments handled during planning?,Tahawur Abbas,"Conflicting requirements were resolved through discussions between students, admins, and IT team."
+Requirements Analysis,Q5: How were conflicting requirements between departments handled during planning?,Amjad,Conflicts were handled by prioritizing critical features and implementing iterative improvements.
+Requirements Analysis,Q5: How were conflicting requirements between departments handled during planning?,Asad Ali,Conflicts were discussed informally and resolved logically during planning.
+Requirements Analysis,Q5: How were conflicting requirements between departments handled during planning?,Muhammad Askari,Conflicts were difficult to resolve due to absence of a comprehensive SRS document.
+Requirements Analysis,Q6: Were any industry standards or educational guidelines considered during requirement definition?,Imtiaz Ahmed,Yes - industry practices such as object-oriented principles and a concurrent/agile approach were followed.
+Requirements Analysis,Q6: Were any industry standards or educational guidelines considered during requirement definition?,Javid Hussain,Some standard practices like structured PHP and modular development were considered.
+Requirements Analysis,Q6: Were any industry standards or educational guidelines considered during requirement definition?,Tahawur Abbas,Basic coding and design guidelines were applied in line with academic standards.
+Requirements Analysis,Q6: Were any industry standards or educational guidelines considered during requirement definition?,Amjad,Some industry practices and coding standards were informally applied.
+Requirements Analysis,Q6: Were any industry standards or educational guidelines considered during requirement definition?,Asad Ali,No specific guidelines were followed; it was an in-house approach.
+Requirements Analysis,Q6: Were any industry standards or educational guidelines considered during requirement definition?,Muhammad Askari,Industry standards were considered informally during development.
+Requirements Analysis,Q7: Is there a process in place for updating requirements when user needs evolve?,Imtiaz Ahmed,No formal process is documented; updates are handled informally.
+Requirements Analysis,Q7: Is there a process in place for updating requirements when user needs evolve?,Javid Hussain,New students were included as interns in subsequent iterations to assist in further development.
+Requirements Analysis,Q7: Is there a process in place for updating requirements when user needs evolve?,Tahawur Abbas,Updates were applied when user requirements changed or issues arose.
+Requirements Analysis,Q7: Is there a process in place for updating requirements when user needs evolve?,Amjad,Regular updates and version control were used to accommodate evolving requirements.
+Requirements Analysis,Q7: Is there a process in place for updating requirements when user needs evolve?,Asad Ali,Requirements are dynamic and evolve based on changing needs.
+Requirements Analysis,Q7: Is there a process in place for updating requirements when user needs evolve?,Muhammad Askari,Handled informally through stakeholder meetings and incremental development.
+Design & Architecture,"Q1: Was any formal software design used (e.g., UML diagrams, ER diagrams)?",Imtiaz Ahmed,"There was no formal design initially because Dr. Irshad Hussain, being an expert, directly guided the system design."
+Design & Architecture,"Q1: Was any formal software design used (e.g., UML diagrams, ER diagrams)?",Javid Hussain,No formal design tools; Joomla and structured PHP were used.
+Design & Architecture,"Q1: Was any formal software design used (e.g., UML diagrams, ER diagrams)?",Tahawur Abbas,"Yes, an ER diagram was created for database structure."
+Design & Architecture,"Q1: Was any formal software design used (e.g., UML diagrams, ER diagrams)?",Amjad,"Yes, an ER diagram was developed."
+Design & Architecture,"Q1: Was any formal software design used (e.g., UML diagrams, ER diagrams)?",Asad Ali,"Basic system design was used, but no formal diagrams were created."
+Design & Architecture,"Q1: Was any formal software design used (e.g., UML diagrams, ER diagrams)?",Muhammad Askari,ER diagrams were used for database design. No UML diagrams were created.
+Design & Architecture,Q2: Were design alternatives evaluated before implementation?,Imtiaz Ahmed,No - design alternatives were not formally documented.
+Design & Architecture,Q2: Were design alternatives evaluated before implementation?,Javid Hussain,"Yes, design alternatives were considered informally based on feasibility and system requirements."
+Design & Architecture,Q2: Were design alternatives evaluated before implementation?,Tahawur Abbas,"Yes, the design was evaluated."
+Design & Architecture,Q2: Were design alternatives evaluated before implementation?,Amjad,"Yes, discussions were held to address system limitations and the choice of PHP."
+Design & Architecture,Q2: Were design alternatives evaluated before implementation?,Asad Ali,"Yes, design alternatives were informally discussed among team members."
+Design & Architecture,Q2: Were design alternatives evaluated before implementation?,Muhammad Askari,"Yes, design alternatives were evaluated with stakeholder approval."
+Design & Architecture,Q3: Was the design reviewed or approved by stakeholders?,Imtiaz Ahmed,"Yes, Dr. Irshad Hussain reviewed the design."
+Design & Architecture,Q3: Was the design reviewed or approved by stakeholders?,Javid Hussain,"Yes, Dr. Irshad Hussain supervised development and reviewed code."
+Design & Architecture,Q3: Was the design reviewed or approved by stakeholders?,Tahawur Abbas,The design was reviewed internally but not formally approved by external stakeholders.
+Design & Architecture,Q3: Was the design reviewed or approved by stakeholders?,Amjad,"Yes, the design was reviewed and approved by key stakeholders."
+Design & Architecture,Q3: Was the design reviewed or approved by stakeholders?,Asad Ali,"Yes, stakeholders were consulted informally."
+Design & Architecture,Q3: Was the design reviewed or approved by stakeholders?,Muhammad Askari,"Yes, stakeholders approved design alternatives."
+Design & Architecture,"Q4: What architecture pattern is the LMS based on? (Monolithic, Microservices, Layered, etc.)",Imtiaz Ahmed,The system uses a layered approach typical for Joomla-based applications.
+Design & Architecture,"Q4: What architecture pattern is the LMS based on? (Monolithic, Microservices, Layered, etc.)",Javid Hussain,"A structured, layered approach."
+Design & Architecture,"Q4: What architecture pattern is the LMS based on? (Monolithic, Microservices, Layered, etc.)",Tahawur Abbas,Layered architecture was applied within the limitations of Joomla.
+Design & Architecture,"Q4: What architecture pattern is the LMS based on? (Monolithic, Microservices, Layered, etc.)",Amjad,Layered/monolithic approach was used; modular separation maintained.
+Design & Architecture,"Q4: What architecture pattern is the LMS based on? (Monolithic, Microservices, Layered, etc.)",Asad Ali,Layered architecture was informally applied.
+Design & Architecture,"Q4: What architecture pattern is the LMS based on? (Monolithic, Microservices, Layered, etc.)",Muhammad Askari,The system follows a microservices architecture.
+Design & Architecture,Q5: How do you manage scalability and modularity in the system?,Imtiaz Ahmed,"Through Joomla features, scalability and modularity are managed."
+Design & Architecture,Q5: How do you manage scalability and modularity in the system?,Javid Hussain,Scalability and modularity are managed within the structured layered system.
+Design & Architecture,Q5: How do you manage scalability and modularity in the system?,Tahawur Abbas,Scalability and modularity were difficult to manage.
+Design & Architecture,Q5: How do you manage scalability and modularity in the system?,Amjad,Modular separation was maintained for clarity and maintainability; plans to shift from Joomla to Laravel to improve scalability.
+Design & Architecture,Q5: How do you manage scalability and modularity in the system?,Asad Ali,Basic modularity is maintained; scalability is planned for future upgrades.
+Design & Architecture,Q5: How do you manage scalability and modularity in the system?,Muhammad Askari,Scalability and modularity were achieved through microservices architecture.
+Design & Architecture,"Q6: Do you have any plans to make the website more secure, such as by adding features like an SSL certificate?",Imtiaz Ahmed,Yes - an SSL certificate is already in place for the website but not for LMS.
+Design & Architecture,"Q6: Do you have any plans to make the website more secure, such as by adding features like an SSL certificate?",Javid Hussain,Security measures like query sanitization and XSS protection were implemented early; SSL implementation is planned.
+Design & Architecture,"Q6: Do you have any plans to make the website more secure, such as by adding features like an SSL certificate?",Tahawur Abbas,"Yes, security measures like SSL certificates were considered."
+Design & Architecture,"Q6: Do you have any plans to make the website more secure, such as by adding features like an SSL certificate?",Amjad,"Yes, SSL certificate implementation was planned (already purchased)."
+Design & Architecture,"Q6: Do you have any plans to make the website more secure, such as by adding features like an SSL certificate?",Asad Ali,"For website security, SSL and VHE are applied; LMS security is planned."
+Design & Architecture,"Q6: Do you have any plans to make the website more secure, such as by adding features like an SSL certificate?",Muhammad Askari,SSL and security improvements are planned for LMS.
+Design & Architecture,Q7: Was the database schema designed for flexibility and future growth?,Imtiaz Ahmed,The database schema allows basic growth; ER diagrams guided design.
+Design & Architecture,Q7: Was the database schema designed for flexibility and future growth?,Javid Hussain,"The database was structured for current requirements, but flexibility was limited."
+Design & Architecture,Q7: Was the database schema designed for flexibility and future growth?,Tahawur Abbas,ER diagram-based schema allows for some future growth.
+Design & Architecture,Q7: Was the database schema designed for flexibility and future growth?,Amjad,The database design is modular and adaptable for future enhancements.
+Design & Architecture,Q7: Was the database schema designed for flexibility and future growth?,Asad Ali,Database designed for current needs with some modularity for future updates.
+Design & Architecture,Q7: Was the database schema designed for flexibility and future growth?,Muhammad Askari,"Yes, ER diagrams were used for database schema design."
+Design & Architecture,"Q8: Are there separate layers for business logic, data access, and presentation in the system?",Imtiaz Ahmed,"Yes, Joomla's built-in structure provides basic separation of concerns."
+Design & Architecture,"Q8: Are there separate layers for business logic, data access, and presentation in the system?",Javid Hussain,"Yes, structured layered approach."
+Design & Architecture,"Q8: Are there separate layers for business logic, data access, and presentation in the system?",Tahawur Abbas,Basic separation is followed between database access and application logic.
+Design & Architecture,"Q8: Are there separate layers for business logic, data access, and presentation in the system?",Amjad,"Yes, modular separation was maintained."
+Design & Architecture,"Q8: Are there separate layers for business logic, data access, and presentation in the system?",Asad Ali,Layers exist informally within the Joomla structure.
+Design & Architecture,"Q8: Are there separate layers for business logic, data access, and presentation in the system?",Muhammad Askari,"Yes, business logic, data access, and presentation layers are separated using microservices principles."
+Design & Architecture,"Q9: Is the system designed to support integration with third-party platforms (e.g., payment gateways, learning tools)?",Imtiaz Ahmed,"Currently, no third-party platform support is implemented."
+Design & Architecture,"Q9: Is the system designed to support integration with third-party platforms (e.g., payment gateways, learning tools)?",Javid Hussain,"No, system follows a structured approach without third-party plugins."
+Design & Architecture,"Q9: Is the system designed to support integration with third-party platforms (e.g., payment gateways, learning tools)?",Tahawur Abbas,System designed for potential integration but not implemented yet.
+Design & Architecture,"Q9: Is the system designed to support integration with third-party platforms (e.g., payment gateways, learning tools)?",Amjad,Third-party integrations are possible with additional development.
+Design & Architecture,"Q9: Is the system designed to support integration with third-party platforms (e.g., payment gateways, learning tools)?",Asad Ali,Planned for future LMS updates; not currently implemented.
+Design & Architecture,"Q9: Is the system designed to support integration with third-party platforms (e.g., payment gateways, learning tools)?",Muhammad Askari,Integration support is considered but not yet implemented.
+Development Process,Q1: What programming languages or frameworks were used at the beginning of the development process?,Imtiaz Ahmed,Joomla was used initially.
+Development Process,Q1: What programming languages or frameworks were used at the beginning of the development process?,Javid Hussain,Backend: PHP (structured); Database: SQL.
+Development Process,Q1: What programming languages or frameworks were used at the beginning of the development process?,Tahawur Abbas,Core PHP and Joomla were used for backend.
+Development Process,Q1: What programming languages or frameworks were used at the beginning of the development process?,Amjad,PHP and Joomla.
+Development Process,Q1: What programming languages or frameworks were used at the beginning of the development process?,Asad Ali,"Programming languages (Joomla, PHP) were used."
+Development Process,Q1: What programming languages or frameworks were used at the beginning of the development process?,Muhammad Askari,Core PHP and Joomla were used.
+Development Process,"Q2: Is the project managed using any tools like Jira, Trello, or GitHub? Was the coding standards or best practices followed?",Imtiaz Ahmed,Version control is handled using SVN.
+Development Process,"Q2: Is the project managed using any tools like Jira, Trello, or GitHub? Was the coding standards or best practices followed?",Javid Hussain,"Project management was mostly offline due to infrastructure limitations, coding practices were informal."
+Development Process,"Q2: Is the project managed using any tools like Jira, Trello, or GitHub? Was the coding standards or best practices followed?",Tahawur Abbas,SVN and GitHub were used; only basic coding practices were followed.
+Development Process,"Q2: Is the project managed using any tools like Jira, Trello, or GitHub? Was the coding standards or best practices followed?",Amjad,Project management was facilitated through Asana; version control via Git.
+Development Process,"Q2: Is the project managed using any tools like Jira, Trello, or GitHub? Was the coding standards or best practices followed?",Asad Ali,"SVN was used to manage the project, now moving towards GitHub."
+Development Process,"Q2: Is the project managed using any tools like Jira, Trello, or GitHub? Was the coding standards or best practices followed?",Muhammad Askari,The project migrated from SVN to GitHub. No defined coding style guide was followed.
+Development Process,"Q3: Which SDLC model was used for development? (Agile, Waterfall, Spiral, etc.)",Imtiaz Ahmed,An Agile (concurrent) methodology was used.
+Development Process,"Q3: Which SDLC model was used for development? (Agile, Waterfall, Spiral, etc.)",Javid Hussain,Iterative development model was followed informally.
+Development Process,"Q3: Which SDLC model was used for development? (Agile, Waterfall, Spiral, etc.)",Tahawur Abbas,Iterative Model.
+Development Process,"Q3: Which SDLC model was used for development? (Agile, Waterfall, Spiral, etc.)",Amjad,Spiral Model.
+Development Process,"Q3: Which SDLC model was used for development? (Agile, Waterfall, Spiral, etc.)",Asad Ali,Incremental/Iterative approach was applied without formal documentation.
+Development Process,"Q3: Which SDLC model was used for development? (Agile, Waterfall, Spiral, etc.)",Muhammad Askari,Incremental model was used.
+Development Process,Q4: Are there any defined coding standards or guidelines the dev team follows?,Imtiaz Ahmed,No formal coding standards existed initially; standards are being adopted now.
+Development Process,Q4: Are there any defined coding standards or guidelines the dev team follows?,Javid Hussain,No formal coding standards due to limited resources.
+Development Process,Q4: Are there any defined coding standards or guidelines the dev team follows?,Tahawur Abbas,"No formal coding standards, only basic practices."
+Development Process,Q4: Are there any defined coding standards or guidelines the dev team follows?,Amjad,Code specifications and modular separation were followed.
+Development Process,Q4: Are there any defined coding standards or guidelines the dev team follows?,Asad Ali,Basic coding practices and modular separation were informally followed.
+Development Process,Q4: Are there any defined coding standards or guidelines the dev team follows?,Muhammad Askari,"No, absence of a defined coding style guide."
+Development Process,Q5: Is the backend code regularly updated to fix security bugs?,Imtiaz Ahmed,Updates have been irregular and unscheduled.
+Development Process,Q5: Is the backend code regularly updated to fix security bugs?,Javid Hussain,"Yes, the system has undergone constant updates since its development."
+Development Process,Q5: Is the backend code regularly updated to fix security bugs?,Tahawur Abbas,"Yes, backend code adjustments were made during maintenance."
+Development Process,Q5: Is the backend code regularly updated to fix security bugs?,Amjad,"Yes, regular updates and monitoring were performed."
+Development Process,Q5: Is the backend code regularly updated to fix security bugs?,Asad Ali,"Yes, the backend code is regularly updated to fix security bugs."
+Development Process,Q5: Is the backend code regularly updated to fix security bugs?,Muhammad Askari,"Yes, regular patches are applied bi-monthly and weekly."
+Development Process,Q6: Is there a peer review or approval process for code before it's merged?,Imtiaz Ahmed,"Informal reviews may occur, but no formal peer review process exists."
+Development Process,Q6: Is there a peer review or approval process for code before it's merged?,Javid Hussain,"Yes, reviewed by Dr. Irshad Hussain during development; now managed by Mr. Javid Hussain."
+Development Process,Q6: Is there a peer review or approval process for code before it's merged?,Tahawur Abbas,Peer review is informal and conducted by team members.
+Development Process,Q6: Is there a peer review or approval process for code before it's merged?,Amjad,Informal review by team members before merging.
+Development Process,Q6: Is there a peer review or approval process for code before it's merged?,Asad Ali,Informal code reviews are performed occasionally.
+Development Process,Q6: Is there a peer review or approval process for code before it's merged?,Muhammad Askari,"Yes, peer reviews were conducted by the Director and IT team."
+Development Process,"Q7: Were open-source libraries or tools used during development? If yes, how were they selected?",Imtiaz Ahmed,Yes - open-source libraries were used and selected based on availability and familiarity rather than through a formal vetting process.
+Development Process,"Q7: Were open-source libraries or tools used during development? If yes, how were they selected?",Javid Hussain,"No external plugins, extensions, or open-source libraries were used."
+Development Process,"Q7: Were open-source libraries or tools used during development? If yes, how were they selected?",Tahawur Abbas,Open-source libraries were used informally based on availability and team familiarity.
+Development Process,"Q7: Were open-source libraries or tools used during development? If yes, how were they selected?",Amjad,Open-source libraries were used as needed based on project requirements.
+Development Process,"Q7: Were open-source libraries or tools used during development? If yes, how were they selected?",Asad Ali,"Yes, open-source libraries and tools are used."
+Development Process,"Q7: Were open-source libraries or tools used during development? If yes, how were they selected?",Muhammad Askari,Open-source libraries were used when needed for functionality.
+Development Process,"Q8: Are different environments (dev, staging, production) used during the development lifecycle?",Imtiaz Ahmed,No - only a local development environment is currently used.
+Development Process,"Q8: Are different environments (dev, staging, production) used during the development lifecycle?",Javid Hussain,Development and testing were mostly done locally; no formal staging/production environments.
+Development Process,"Q8: Are different environments (dev, staging, production) used during the development lifecycle?",Tahawur Abbas,Development and production were handled on local/server environment.
+Development Process,"Q8: Are different environments (dev, staging, production) used during the development lifecycle?",Amjad,Development and production were done on local environments; staging environment not formalized.
+Development Process,"Q8: Are different environments (dev, staging, production) used during the development lifecycle?",Asad Ali,Separate environments not formally defined; mostly local testing.
+Development Process,"Q8: Are different environments (dev, staging, production) used during the development lifecycle?",Muhammad Askari,"Yes, staging servers were used for testing."
+Testing Process,Q1: Was the system tested before deployment? How?,Imtiaz Ahmed,Yes - minimal manual testing was performed by team members.
+Testing Process,Q1: Was the system tested before deployment? How?,Javid Hussain,"Yes, bulk data was generated and tested locally."
+Testing Process,Q1: Was the system tested before deployment? How?,Tahawur Abbas,"Yes, manual testing using bulk data."
+Testing Process,Q1: Was the system tested before deployment? How?,Amjad,"Yes, manual testing was conducted."
+Testing Process,Q1: Was the system tested before deployment? How?,Asad Ali,"Yes, testing was performed, though the process was not clearly defined."
+Testing Process,Q1: Was the system tested before deployment? How?,Muhammad Askari,"Yes, unit and integration testing were performed on staging servers."
+Testing Process,"Q2: What types of testing were conducted (unit, integration, user)?",Imtiaz Ahmed,Unit testing and beta testing were performed.
+Testing Process,"Q2: What types of testing were conducted (unit, integration, user)?",Javid Hussain,Data testing was done; other types were informal.
+Testing Process,"Q2: What types of testing were conducted (unit, integration, user)?",Tahawur Abbas,Manual testing (unit or integration not specifically mentioned).
+Testing Process,"Q2: What types of testing were conducted (unit, integration, user)?",Amjad,Manual testing (unit or integration not specifically mentioned).
+Testing Process,"Q2: What types of testing were conducted (unit, integration, user)?",Asad Ali,Unit and functional testing were performed recently.
+Testing Process,"Q2: What types of testing were conducted (unit, integration, user)?",Muhammad Askari,Unit and integration testing.
+Testing Process,Q3: Were students or faculty involved in testing or feedback?,Imtiaz Ahmed,Yes - students and faculty provided feedback after testing.
+Testing Process,Q3: Were students or faculty involved in testing or feedback?,Javid Hussain,"Yes, faculty supervision by Dr. Irshad Hussain; testing conducted by team members."
+Testing Process,Q3: Were students or faculty involved in testing or feedback?,Tahawur Abbas,Students and admins provided input indirectly.
+Testing Process,Q3: Were students or faculty involved in testing or feedback?,Amjad,"Yes, faculty and some students participated."
+Testing Process,Q3: Were students or faculty involved in testing or feedback?,Asad Ali,Students and faculty were partially involved; feedback was limited.
+Testing Process,Q3: Were students or faculty involved in testing or feedback?,Muhammad Askari,Feedback from users was collected informally by IT staff.
+Testing Process,Q4: Is there a dedicated testing phase in the development cycle?,Imtiaz Ahmed,No - there was no dedicated testing phase.
+Testing Process,Q4: Is there a dedicated testing phase in the development cycle?,Javid Hussain,Testing was performed locally but no formal phase was defined.
+Testing Process,Q4: Is there a dedicated testing phase in the development cycle?,Tahawur Abbas,Testing was done as part of development iterations.
+Testing Process,Q4: Is there a dedicated testing phase in the development cycle?,Amjad,"Yes, testing was conducted by the developer team with oversight from IT staff."
+Testing Process,Q4: Is there a dedicated testing phase in the development cycle?,Asad Ali,"Testing was performed, but not clearly defined as a formal phase."
+Testing Process,Q4: Is there a dedicated testing phase in the development cycle?,Muhammad Askari,Testing phases are informal and integrated with development.
+Testing Process,"Q5: Is automated testing being used? If yes, what frameworks or tools are in place?",Imtiaz Ahmed,No - automated testing and related tools were not used.
+Testing Process,"Q5: Is automated testing being used? If yes, what frameworks or tools are in place?",Javid Hussain,No automated testing; manual processes were used.
+Testing Process,"Q5: Is automated testing being used? If yes, what frameworks or tools are in place?",Tahawur Abbas,Automated testing is not used; testing is manual.
+Testing Process,"Q5: Is automated testing being used? If yes, what frameworks or tools are in place?",Amjad,No automated testing; only manual testing conducted.
+Testing Process,"Q5: Is automated testing being used? If yes, what frameworks or tools are in place?",Asad Ali,No automated testing; lack of it was identified as a drawback.
+Testing Process,"Q5: Is automated testing being used? If yes, what frameworks or tools are in place?",Muhammad Askari,No automated testing.
+Testing Process,Q6: Has any penetration testing or security audit been done recently?,Imtiaz Ahmed,Yes - penetration testing has been performed.
+Testing Process,Q6: Has any penetration testing or security audit been done recently?,Javid Hussain,"Yes, after a cyber-attack, PF Sense firewall was implemented."
+Testing Process,Q6: Has any penetration testing or security audit been done recently?,Tahawur Abbas,Penetration testing was performed using PF Sense or firewall monitoring.
+Testing Process,Q6: Has any penetration testing or security audit been done recently?,Amjad,Penetration and security checks were performed on critical components.
+Testing Process,Q6: Has any penetration testing or security audit been done recently?,Asad Ali,PF SENSE testing has been done recently.
+Testing Process,Q6: Has any penetration testing or security audit been done recently?,Muhammad Askari,No security audits or penetration testing have been done.
+Testing Process,Q7: Is there a bug tracking system in place for managing issues?,Imtiaz Ahmed,No - no bug tracking system is in use.
+Testing Process,Q7: Is there a bug tracking system in place for managing issues?,Javid Hussain,Bug tracking is handled informally via team meetings and communications.
+Testing Process,Q7: Is there a bug tracking system in place for managing issues?,Tahawur Abbas,Bug tracking is done informally through admin feedback.
+Testing Process,Q7: Is there a bug tracking system in place for managing issues?,Amjad,Issues are tracked informally by the development team.
+Testing Process,Q7: Is there a bug tracking system in place for managing issues?,Asad Ali,"No, there is no bug tracking system in place."
+Testing Process,Q7: Is there a bug tracking system in place for managing issues?,Muhammad Askari,Issues are managed informally without a formal tracking system.
+Testing Process,Q8: How is user feedback handled during beta testing?,Imtiaz Ahmed,Feedback is collected informally.
+Testing Process,Q8: How is user feedback handled during beta testing?,Javid Hussain,User feedback is collected through team observations and informal sessions.
+Testing Process,Q8: How is user feedback handled during beta testing?,Tahawur Abbas,User feedback was collected through admin involvement and then applied as updates.
+Testing Process,Q8: How is user feedback handled during beta testing?,Amjad,User feedback was collected from faculty and students and used for system improvements.
+Testing Process,Q8: How is user feedback handled during beta testing?,Asad Ali,"Feedback is partially managed, often informal."
+Testing Process,Q8: How is user feedback handled during beta testing?,Muhammad Askari,Feedback is handled informally through direct IT contact.
+Deployment Process,"Q1: How was the LMS deployed (internal servers, cloud, etc.)? Why? If it is one local server, what operating system is installed/used?",Imtiaz Ahmed,The LMS was deployed on an internal server running Windows. There is a plan to migrate to Linux.
+Deployment Process,"Q1: How was the LMS deployed (internal servers, cloud, etc.)? Why? If it is one local server, what operating system is installed/used?",Javid Hussain,Deployed with local infrastructure; Windows servers were used and internet/device limitations were a challenge.
+Deployment Process,"Q1: How was the LMS deployed (internal servers, cloud, etc.)? Why? If it is one local server, what operating system is installed/used?",Tahawur Abbas,Installed on Windows environment.
+Deployment Process,"Q1: How was the LMS deployed (internal servers, cloud, etc.)? Why? If it is one local server, what operating system is installed/used?",Amjad,The system was successfully deployed on local Windows servers.
+Deployment Process,"Q1: How was the LMS deployed (internal servers, cloud, etc.)? Why? If it is one local server, what operating system is installed/used?",Asad Ali,LMS was deployed through Windows-local server.
+Deployment Process,"Q1: How was the LMS deployed (internal servers, cloud, etc.)? Why? If it is one local server, what operating system is installed/used?",Muhammad Askari,Initially deployed on Windows servers; planned migration to Linux.
+Deployment Process,Q2: Were there any deployment challenges?,Imtiaz Ahmed,"Yes - challenges included ""enum conduction errors"" and browser-related issues."
+Deployment Process,Q2: Were there any deployment challenges?,Javid Hussain,"Yes, IT infrastructure limitations like unreliable internet and devices."
+Deployment Process,Q2: Were there any deployment challenges?,Tahawur Abbas,"Yes, initial difficulty in understanding SVN and deployment setup."
+Deployment Process,Q2: Were there any deployment challenges?,Amjad,"Yes, some adjustments were required at the initial stage."
+Deployment Process,Q2: Were there any deployment challenges?,Asad Ali,Deployment challenges included lack of standardized practices and initial setup issues.
+Deployment Process,Q2: Were there any deployment challenges?,Muhammad Askari,Deployment challenges were mainly related to initial setup and server configuration.
+Deployment Process,Q3: How was training or onboarding handled?,Imtiaz Ahmed,New teachers receive basic training.
+Deployment Process,Q3: How was training or onboarding handled?,Javid Hussain,Training sessions were conducted for users with limited computer skills.
+Deployment Process,Q3: How was training or onboarding handled?,Tahawur Abbas,Training and onboarding were provided through brief orientation and guidance sessions.
+Deployment Process,Q3: How was training or onboarding handled?,Amjad,Orientation sessions and seminars were conducted.
+Deployment Process,Q3: How was training or onboarding handled?,Asad Ali,Training was provided informally to new users and staff.
+Deployment Process,Q3: How was training or onboarding handled?,Muhammad Askari,Onboarding included basic training sessions for new teachers and staff.
+Deployment Process,Q4: Is there a code review process before code is merged into production?,Imtiaz Ahmed,No formal code review process is followed.
+Deployment Process,Q4: Is there a code review process before code is merged into production?,Javid Hussain,All code was reviewed by Dr. Irshad Hussain; currently supervised by Mr. Javid Hussain.
+Deployment Process,Q4: Is there a code review process before code is merged into production?,Tahawur Abbas,Code review is done informally before updates are applied.
+Deployment Process,Q4: Is there a code review process before code is merged into production?,Amjad,Code is reviewed informally by senior developers before deployment.
+Deployment Process,Q4: Is there a code review process before code is merged into production?,Asad Ali,"No, lack of code review was identified as a drawback."
+Deployment Process,Q4: Is there a code review process before code is merged into production?,Muhammad Askari,Peer reviews are conducted for critical code changes before deployment.
+Deployment Process,Q5: Are deployment processes automated using CI/CD pipelines?,Imtiaz Ahmed,No - deployments are manual.
+Deployment Process,Q5: Are deployment processes automated using CI/CD pipelines?,Javid Hussain,Deployment is performed manually without CI/CD automation.
+Deployment Process,Q5: Are deployment processes automated using CI/CD pipelines?,Tahawur Abbas,Deployment processes are manual; no CI/CD pipelines are in place.
+Deployment Process,Q5: Are deployment processes automated using CI/CD pipelines?,Amjad,Deployment is handled manually without automation.
+Deployment Process,Q5: Are deployment processes automated using CI/CD pipelines?,Asad Ali,"No, deployment was not automated using CI/CD pipelines."
+Deployment Process,Q5: Are deployment processes automated using CI/CD pipelines?,Muhammad Askari,Deployment is performed manually without CI/CD automation.
+Deployment Process,Q6: Is there any disaster recovery or backup plan in place?,Imtiaz Ahmed,Yes - there are proper backup processes for data.
+Deployment Process,Q6: Is there any disaster recovery or backup plan in place?,Javid Hussain,"Yes, files are backed up on two servers; upgrades are planned."
+Deployment Process,Q6: Is there any disaster recovery or backup plan in place?,Tahawur Abbas,Disaster recovery and backup processes are in place and regularly maintained.
+Deployment Process,Q6: Is there any disaster recovery or backup plan in place?,Amjad,"Yes, regular backups were performed every 5 to 9 days."
+Deployment Process,Q6: Is there any disaster recovery or backup plan in place?,Asad Ali,"Yes, a disaster recovery and backup plan is in place."
+Deployment Process,Q6: Is there any disaster recovery or backup plan in place?,Muhammad Askari,Backup and disaster recovery procedures are implemented and periodically verified.
+Maintenance Process,Q1: How often is the LMS updated?,Imtiaz Ahmed,Updates are irregular and unscheduled.
+Maintenance Process,Q1: How often is the LMS updated?,Javid Hussain,"Updates are performed periodically, with major updates during winter vacations."
+Maintenance Process,Q1: How often is the LMS updated?,Tahawur Abbas,Updates are applied whenever user requirements change or issues arise.
+Maintenance Process,Q1: How often is the LMS updated?,Amjad,Regular version updates are applied throughout the year.
+Maintenance Process,Q1: How often is the LMS updated?,Asad Ali,LMS updates are done weekly.
+Maintenance Process,Q1: How often is the LMS updated?,Muhammad Askari,Updates and patches are applied bi-monthly or weekly.
+Maintenance Process,Q2: What types of issues are most frequently reported?,Imtiaz Ahmed,Scalability issues and challenges due to COVID-19 related changes are most frequent.
+Maintenance Process,Q2: What types of issues are most frequently reported?,Javid Hussain,Most issues reported relate to system performance and usability.
+Maintenance Process,Q2: What types of issues are most frequently reported?,Tahawur Abbas,"Frequently reported issues include backend adjustments, frontend design changes, and general feature improvements."
+Maintenance Process,Q2: What types of issues are most frequently reported?,Amjad,Most common issues involve student account management and access problems.
+Maintenance Process,Q2: What types of issues are most frequently reported?,Asad Ali,"Most frequently reported issues involve backend adjustments, frontend features, and usability concerns."
+Maintenance Process,Q2: What types of issues are most frequently reported?,Muhammad Askari,Issues reported mostly involve system performance and account management.
+Maintenance Process,Q3: How is feedback from users handled?,Imtiaz Ahmed,"Feedback is handled informally, usually through coordinators or meetings."
+Maintenance Process,Q3: How is feedback from users handled?,Javid Hussain,Feedback is collected informally from users and applied as needed.
+Maintenance Process,Q3: How is feedback from users handled?,Tahawur Abbas,Feedback is applied through code adjustments and system improvements.
+Maintenance Process,Q3: How is feedback from users handled?,Amjad,Continuous feedback is collected and used to improve the LMS.
+Maintenance Process,Q3: How is feedback from users handled?,Asad Ali,Feedback is handled based on reported issues and meetings.
+Maintenance Process,Q3: How is feedback from users handled?,Muhammad Askari,Feedback is handled informally through direct IT contact.
+Maintenance Process,Q4: How is documentation managed and maintained for both developers and users?,Imtiaz Ahmed,No formal documentation currently exists; proper documentation is planned.
+Maintenance Process,Q4: How is documentation managed and maintained for both developers and users?,Javid Hussain,Documentation is limited and maintained informally.
+Maintenance Process,Q4: How is documentation managed and maintained for both developers and users?,Tahawur Abbas,Documentation is maintained informally with updates based on system changes.
+Maintenance Process,Q4: How is documentation managed and maintained for both developers and users?,Amjad,Comprehensive documentation is maintained throughout the system lifecycle.
+Maintenance Process,Q4: How is documentation managed and maintained for both developers and users?,Asad Ali,Documentation is currently insufficient and not properly managed.
+Maintenance Process,Q4: How is documentation managed and maintained for both developers and users?,Muhammad Askari,Documentation for maintenance is lacking or incomplete.
+Maintenance Process,Q5: How are critical bugs or downtime incidents handled and communicated?,Imtiaz Ahmed,Critical bugs and downtime are handled manually; no formal escalation process exists.
+Maintenance Process,Q5: How are critical bugs or downtime incidents handled and communicated?,Javid Hussain,Critical incidents are addressed using tools like PF Sense firewall after security issues.
+Maintenance Process,Q5: How are critical bugs or downtime incidents handled and communicated?,Tahawur Abbas,Critical issues are handled promptly with code adjustments and fixes.
+Maintenance Process,Q5: How are critical bugs or downtime incidents handled and communicated?,Amjad,Critical issues are monitored and resolved by the development team in real-time.
+Maintenance Process,Q5: How are critical bugs or downtime incidents handled and communicated?,Asad Ali,Critical issues are addressed manually with coordination among team members.
+Maintenance Process,Q5: How are critical bugs or downtime incidents handled and communicated?,Muhammad Askari,"Critical issues are managed promptly, though informally."
+Maintenance Process,Q6: Is there a ticketing system for reporting and tracking user issues?,Imtiaz Ahmed,No ticketing system is implemented.
+Maintenance Process,Q6: Is there a ticketing system for reporting and tracking user issues?,Javid Hussain,User issues are tracked informally without a formal ticketing system.
+Maintenance Process,Q6: Is there a ticketing system for reporting and tracking user issues?,Tahawur Abbas,User issues are tracked and applied manually without a formal ticketing system.
+Maintenance Process,Q6: Is there a ticketing system for reporting and tracking user issues?,Amjad,User issues are handled manually and tracked through meetings.
+Maintenance Process,Q6: Is there a ticketing system for reporting and tracking user issues?,Asad Ali,No ticketing system is in place.
+Maintenance Process,Q6: Is there a ticketing system for reporting and tracking user issues?,Muhammad Askari,Issues are tracked informally without a ticketing system.
+Maintenance Process,Q7: Are logs or monitoring tools used to track system health and performance?,Imtiaz Ahmed,"No, logs or monitoring tools are not currently used."
+Maintenance Process,Q7: Are logs or monitoring tools used to track system health and performance?,Javid Hussain,PF Sense firewall monitors abnormal network traffic.
+Maintenance Process,Q7: Are logs or monitoring tools used to track system health and performance?,Tahawur Abbas,System health is monitored manually without formal tools.
+Maintenance Process,Q7: Are logs or monitoring tools used to track system health and performance?,Amjad,The development team actively monitors the live system for performance issues.
+Maintenance Process,Q7: Are logs or monitoring tools used to track system health and performance?,Asad Ali,Logs and monitoring tools are not in use.
+Maintenance Process,Q7: Are logs or monitoring tools used to track system health and performance?,Muhammad Askari,System health and performance are monitored manually by IT staff.
