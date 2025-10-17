@@ -1,21 +1,24 @@
-import cv2
-import numpy as np
 from typing import List, Dict, Tuple, Optional
-from ..models.database import DatabaseManager
-from ..utils.file_manager import FileManager
-from ..config import config
 
 class TrainingService:
     """Handles face recognition model training operations"""
     
     def __init__(self):
+        from models.database import DatabaseManager
+        from utils.file_manager import FileManager
+        from config import config
+        
         self.db = DatabaseManager()
         self.file_manager = FileManager()
+        self.config = config
         self.recognizer = None
     
-    def prepare_training_data(self) -> Tuple[List[np.ndarray], List[int], Dict]:
+    def prepare_training_data(self) -> Tuple[List, List, Dict]:
         """Prepare training data from all student face images"""
         try:
+            import cv2
+            import numpy as np
+            
             faces = []
             labels = []
             label_map = {}
@@ -37,13 +40,13 @@ class TrainingService:
             # Filter students with sufficient images
             valid_students = {}
             for student_id, image_paths in student_images.items():
-                if len(image_paths) >= config.MIN_IMAGES_FOR_TRAINING:
+                if len(image_paths) >= self.config.MIN_IMAGES_FOR_TRAINING:
                     valid_students[student_id] = image_paths
                 else:
-                    print(f"Student {student_id} has only {len(image_paths)} images (minimum {config.MIN_IMAGES_FOR_TRAINING} required)")
+                    print(f"Student {student_id} has only {len(image_paths)} images (minimum {self.config.MIN_IMAGES_FOR_TRAINING} required)")
             
             if not valid_students:
-                raise ValueError(f"No students with sufficient face images. Minimum {config.MIN_IMAGES_FOR_TRAINING} images per student required.")
+                raise ValueError(f"No students with sufficient face images. Minimum {self.config.MIN_IMAGES_FOR_TRAINING} images per student required.")
             
             print(f"Training with {len(valid_students)} students...")
             
@@ -93,6 +96,9 @@ class TrainingService:
     def train_model(self) -> Tuple[bool, str, Dict]:
         """Train the face recognition model"""
         try:
+            import cv2
+            import numpy as np
+            
             # Prepare training data
             faces, labels, label_map = self.prepare_training_data()
             
@@ -149,7 +155,7 @@ class TrainingService:
             for student_id, count in student_images.items():
                 student = self.db.get_student(student_id)
                 if student:
-                    if count >= config.MIN_IMAGES_FOR_TRAINING:
+                    if count >= self.config.MIN_IMAGES_FOR_TRAINING:
                         ready_students[student_id] = {
                             'name': student['name'],
                             'image_count': count,
@@ -160,7 +166,7 @@ class TrainingService:
                             'name': student['name'],
                             'image_count': count,
                             'status': 'not_ready',
-                            'needed': config.MIN_IMAGES_FOR_TRAINING - count
+                            'needed': self.config.MIN_IMAGES_FOR_TRAINING - count
                         }
             
             total_students = len(student_images)
@@ -175,7 +181,7 @@ class TrainingService:
                 'model_trained': self.file_manager.model_exists(),
                 'ready_students_details': ready_students,
                 'not_ready_students_details': not_ready_students,
-                'min_images_required': config.MIN_IMAGES_FOR_TRAINING,
+                'min_images_required': self.config.MIN_IMAGES_FOR_TRAINING,
                 'can_train': ready_count >= 1  # Need at least one student with sufficient images
             }
             
@@ -200,10 +206,10 @@ class TrainingService:
             issues.append("No students with face images found")
         
         if not status['can_train']:
-            issues.append(f"Need at least 1 student with {config.MIN_IMAGES_FOR_TRAINING}+ face images")
+            issues.append(f"Need at least 1 student with {self.config.MIN_IMAGES_FOR_TRAINING}+ face images")
         
         if status['ready_students'] == 0:
-            issues.append(f"No students have the minimum {config.MIN_IMAGES_FOR_TRAINING} face images required for training")
+            issues.append(f"No students have the minimum {self.config.MIN_IMAGES_FOR_TRAINING} face images required for training")
         
         return len(issues) == 0, issues
     

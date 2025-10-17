@@ -1,15 +1,15 @@
-# my code:
 import sqlite3
 import datetime
 from pathlib import Path
 from typing import List, Dict, Optional, Tuple, Any
-from ..config import config
 
 class DatabaseManager:
     """Manages all database operations for the attendance system"""
     
     def __init__(self, db_path: str = None):
-        self.db_path = db_path or config.DATABASE_PATH
+        from config import config
+        self.config = config
+        self.db_path = db_path or self.config.DATABASE_PATH
         self._create_tables()
     
     def _get_connection(self) -> sqlite3.Connection:
@@ -368,182 +368,4 @@ class DatabaseManager:
                 
         except Exception as e:
             print(f"Error getting system logs: {e}")
-            return []
-
-
-# Your code
-
-import sqlite3
-import datetime
-from pathlib import Path
-from typing import List, Dict, Optional, Tuple
-
-class DatabaseManager:
-    """Manages all database operations for the attendance system"""
-    
-    def __init__(self, db_path: str = None):
-        from config import config
-        self.db_path = db_path or config.DATABASE_PATH
-        self._create_tables()
-    
-    def _get_connection(self) -> sqlite3.Connection:
-        """Get database connection with row factory"""
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
-        return conn
-    
-    def _create_tables(self):
-        """Create necessary tables if they don't exist"""
-        from config import config
-        Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
-        
-        with self._get_connection() as conn:
-            cursor = conn.cursor()
-            
-            # Students table
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS students (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    student_id TEXT UNIQUE NOT NULL,
-                    name TEXT NOT NULL,
-                    email TEXT,
-                    department TEXT,
-                    registration_date TEXT NOT NULL,
-                    is_active BOOLEAN DEFAULT 1,
-                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
-                )
-            ''')
-            
-            # Attendance table
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS attendance (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    student_id TEXT NOT NULL,
-                    name TEXT NOT NULL,
-                    date TEXT NOT NULL,
-                    time TEXT NOT NULL,
-                    status TEXT DEFAULT 'present',
-                    notes TEXT,
-                    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (student_id) REFERENCES students (student_id),
-                    UNIQUE(student_id, date)
-                )
-            ''')
-            
-            conn.commit()
-    
-    def add_student(self, student_id: str, name: str, email: str = None, 
-                   department: str = None) -> Tuple[bool, str]:
-        """Add a new student to the database"""
-        try:
-            with self._get_connection() as conn:
-                cursor = conn.cursor()
-                registration_date = datetime.datetime.now().isoformat()
-                
-                cursor.execute('''
-                    INSERT INTO students (student_id, name, email, department, registration_date)
-                    VALUES (?, ?, ?, ?, ?)
-                ''', (student_id, name, email, department, registration_date))
-                
-                conn.commit()
-                return True, "Student registered successfully"
-                
-        except sqlite3.IntegrityError:
-            return False, f"Student ID {student_id} already exists"
-        except Exception as e:
-            return False, f"Database error: {str(e)}"
-    
-    def get_student(self, student_id: str) -> Optional[Dict]:
-        """Get student by ID"""
-        try:
-            with self._get_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute('''
-                    SELECT * FROM students WHERE student_id = ? AND is_active = 1
-                ''', (student_id,))
-                
-                row = cursor.fetchone()
-                return dict(row) if row else None
-                
-        except Exception as e:
-            print(f"Error getting student: {e}")
-            return None
-    
-    def get_all_students(self) -> List[Dict]:
-        """Get all students"""
-        try:
-            with self._get_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute('''
-                    SELECT student_id, name, email, department, registration_date 
-                    FROM students WHERE is_active = 1 
-                    ORDER BY name
-                ''')
-                
-                return [dict(row) for row in cursor.fetchall()]
-                
-        except Exception as e:
-            print(f"Error getting students: {e}")
-            return []
-    
-    def get_students_count(self) -> int:
-        """Get total number of active students"""
-        try:
-            with self._get_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute('SELECT COUNT(*) FROM students WHERE is_active = 1')
-                return cursor.fetchone()[0]
-        except Exception as e:
-            print(f"Error getting students count: {e}")
-            return 0
-    
-    def mark_attendance(self, student_id: str, name: str, status: str = "present", 
-                       notes: str = None) -> Tuple[bool, str]:
-        """Mark attendance for a student"""
-        try:
-            with self._get_connection() as conn:
-                cursor = conn.cursor()
-                
-                # Check if already marked today
-                today = datetime.datetime.now().strftime('%Y-%m-%d')
-                cursor.execute('''
-                    SELECT id FROM attendance 
-                    WHERE student_id = ? AND date = ?
-                ''', (student_id, today))
-                
-                if cursor.fetchone():
-                    return False, f"Attendance already marked for {name} today"
-                
-                # Mark attendance
-                current_time = datetime.datetime.now().strftime('%H:%M:%S')
-                cursor.execute('''
-                    INSERT INTO attendance (student_id, name, date, time, status, notes)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                ''', (student_id, name, today, current_time, status, notes))
-                
-                conn.commit()
-                return True, f"Attendance marked for {name} at {current_time}"
-                
-        except Exception as e:
-            return False, f"Error marking attendance: {str(e)}"
-    
-    def get_attendance(self, date: str = None) -> List[Dict]:
-        """Get attendance records for a specific date"""
-        try:
-            if not date:
-                date = datetime.datetime.now().strftime('%Y-%m-%d')
-            
-            with self._get_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute('''
-                    SELECT student_id, name, time, status, notes
-                    FROM attendance 
-                    WHERE date = ?
-                    ORDER BY time DESC
-                ''', (date,))
-                
-                return [dict(row) for row in cursor.fetchall()]
-                
-        except Exception as e:
-            print(f"Error getting attendance: {e}")
             return []

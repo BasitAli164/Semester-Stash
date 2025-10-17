@@ -1,20 +1,13 @@
-# my code
-import os
-import sys
-
-# Add the backend directory to Python path
-current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, current_dir)
-
-from models.database import DatabaseManager
-from utils.file_manager import FileManager
-from utils.image_processor import ImageProcessor
-
+from typing import List, Dict, Tuple, Optional
 
 class StudentService:
     """Handles student-related business logic"""
     
     def __init__(self):
+        from models.database import DatabaseManager
+        from utils.file_manager import FileManager
+        from utils.image_processor import ImageProcessor
+        
         self.db = DatabaseManager()
         self.file_manager = FileManager()
         self.image_processor = ImageProcessor()
@@ -180,84 +173,3 @@ class StudentService:
             'avg_images_per_student': round(total_face_images / students_with_faces, 2) if students_with_faces > 0 else 0,
             'coverage_rate': round((students_with_faces / total_students) * 100, 2) if total_students > 0 else 0
         }
-
-
-# your code:
-from typing import List, Dict, Tuple, Optional
-
-class StudentService:
-    """Handles student-related business logic"""
-    
-    def __init__(self):
-        from models.database import DatabaseManager
-        from utils.file_manager import FileManager
-        from utils.image_processor import ImageProcessor
-        
-        self.db = DatabaseManager()
-        self.file_manager = FileManager()
-        self.image_processor = ImageProcessor()
-    
-    def register_student(self, student_data: Dict) -> Tuple[bool, str]:
-        """Register a new student"""
-        student_id = student_data.get('student_id', '').strip()
-        name = student_data.get('name', '').strip()
-        email = student_data.get('email', '').strip() or None
-        department = student_data.get('department', '').strip() or None
-        
-        # Validation
-        if not student_id:
-            return False, "Student ID is required"
-        
-        if not name:
-            return False, "Student name is required"
-        
-        return self.db.add_student(student_id, name, email, department)
-    
-    def capture_face_images(self, student_id: str, image_data: str) -> Tuple[bool, str, int]:
-        """Capture and save face images for a student"""
-        try:
-            # Validate student exists
-            student = self.db.get_student(student_id)
-            if not student:
-                return False, "Student not found", 0
-            
-            # Convert base64 to image
-            image = self.image_processor.base64_to_image(image_data)
-            
-            # Detect faces
-            face_images, face_coords = self.image_processor.detect_faces(image)
-            
-            if not face_images:
-                return False, "No faces detected in the image", 0
-            
-            # Save face images
-            current_count = self.file_manager.count_student_images(student_id)
-            saved_count = 0
-            
-            for i, face_img in enumerate(face_images):
-                success, message = self.file_manager.save_face_image(
-                    student_id, face_img, current_count + i + 1
-                )
-                if success:
-                    saved_count += 1
-            
-            return True, f"Saved {saved_count} face image(s)", saved_count
-            
-        except Exception as e:
-            return False, f"Error capturing faces: {str(e)}", 0
-    
-    def get_all_students(self) -> List[Dict]:
-        """Get all students"""
-        return self.db.get_all_students()
-    
-    def get_student_info(self, student_id: str) -> Optional[Dict]:
-        """Get complete student information"""
-        student = self.db.get_student(student_id)
-        if not student:
-            return None
-        
-        # Add additional information
-        student_dict = dict(student)
-        student_dict['face_images_count'] = self.file_manager.count_student_images(student_id)
-        
-        return student_dict

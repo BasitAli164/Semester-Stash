@@ -1,16 +1,14 @@
-import cv2
-import numpy as np
 from typing import List, Dict, Tuple, Optional
-from ..models.database import DatabaseManager
-from ..utils.file_manager import FileManager
-from ..utils.image_processor import ImageProcessor
-from ..models.face_model import FaceRecognizer
-from ..config import config
 
 class AttendanceService:
     """Handles attendance-related business logic"""
     
     def __init__(self):
+        from models.database import DatabaseManager
+        from utils.file_manager import FileManager
+        from utils.image_processor import ImageProcessor
+        from models.face_model import FaceRecognizer
+        
         self.db = DatabaseManager()
         self.file_manager = FileManager()
         self.image_processor = ImageProcessor()
@@ -23,6 +21,8 @@ class AttendanceService:
     def recognize_faces(self, image_data: str) -> Tuple[bool, str, List[Dict]]:
         """Recognize faces in image and return results"""
         try:
+            import numpy as np
+            
             if not self.is_model_ready():
                 return False, "Face recognition model is not trained. Please train the model first.", []
             

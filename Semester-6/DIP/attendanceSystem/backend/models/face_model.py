@@ -1,38 +1,47 @@
-import cv2
-import numpy as np
 import os
 import csv
 from pathlib import Path
 from typing import List, Dict, Tuple, Optional
-from ..config import config
 
 class FaceRecognizer:
     """Face recognition model using OpenCV's LBPH recognizer"""
     
     def __init__(self, model_path: str = None, label_map_path: str = None):
-        self.model_path = model_path or config.MODEL_FILE
-        self.label_map_path = label_map_path or config.LABEL_MAP_FILE
+        from config import config
+        self.config = config
+        self.model_path = model_path or self.config.MODEL_FILE
+        self.label_map_path = label_map_path or self.config.LABEL_MAP_FILE
         self.recognizer = None
         self.label_map = {}
-        self.face_cascade = cv2.CascadeClassifier(
-            cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
-        )
+        self.face_cascade = None
         self._ensure_cascade_loaded()
         self.load_model()
     
     def _ensure_cascade_loaded(self):
         """Ensure face cascade classifier is loaded properly"""
-        if self.face_cascade.empty():
-            # Try alternative path
-            alt_path = '/usr/share/opencv4/haarcascades/haarcascade_frontalface_default.xml'
-            if os.path.exists(alt_path):
-                self.face_cascade = cv2.CascadeClassifier(alt_path)
-            else:
-                raise RuntimeError("Failed to load face detection cascade classifier")
+        try:
+            import cv2
+            
+            self.face_cascade = cv2.CascadeClassifier(
+                cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
+            )
+            
+            if self.face_cascade.empty():
+                # Try alternative path
+                alt_path = '/usr/share/opencv4/haarcascades/haarcascade_frontalface_default.xml'
+                if os.path.exists(alt_path):
+                    self.face_cascade = cv2.CascadeClassifier(alt_path)
+                else:
+                    raise RuntimeError("Failed to load face detection cascade classifier")
+        except Exception as e:
+            print(f"Error loading cascade classifier: {e}")
+            raise RuntimeError("Failed to load face detection cascade classifier")
     
     def load_model(self) -> bool:
         """Load trained model and label mapping"""
         try:
+            import cv2
+            
             if os.path.exists(self.model_path):
                 self.recognizer = cv2.face.LBPHFaceRecognizer_create()
                 self.recognizer.read(str(self.model_path))
@@ -65,9 +74,11 @@ class FaceRecognizer:
         """Check if model is loaded and ready for recognition"""
         return self.recognizer is not None and len(self.label_map) > 0
     
-    def detect_faces(self, image_array: np.ndarray) -> Tuple[List[np.ndarray], List[Tuple]]:
+    def detect_faces(self, image_array) -> Tuple[List, List]:
         """Detect faces in image and return face images and coordinates"""
         try:
+            import cv2
+            
             # Convert to grayscale if needed
             if len(image_array.shape) == 3:
                 gray = cv2.cvtColor(image_array, cv2.COLOR_BGR2GRAY)
@@ -77,9 +88,9 @@ class FaceRecognizer:
             # Detect faces
             faces = self.face_cascade.detectMultiScale(
                 gray,
-                scaleFactor=config.FACE_DETECTION_SCALE_FACTOR,
-                minNeighbors=config.FACE_DETECTION_MIN_NEIGHBORS,
-                minSize=config.FACE_DETECTION_MIN_SIZE
+                scaleFactor=self.config.FACE_DETECTION_SCALE_FACTOR,
+                minNeighbors=self.config.FACE_DETECTION_MIN_NEIGHBORS,
+                minSize=self.config.FACE_DETECTION_MIN_SIZE
             )
             
             face_images = []
@@ -103,7 +114,7 @@ class FaceRecognizer:
         except Exception as e:
             raise ValueError(f"Face detection failed: {str(e)}")
     
-    def recognize_faces(self, image_array: np.ndarray) -> List[Dict]:
+    def recognize_faces(self, image_array) -> List[Dict]:
         """Recognize faces in image and return recognition results"""
         if not self.is_model_ready():
             raise RuntimeError("Model not trained. Please train the model first.")
@@ -125,7 +136,7 @@ class FaceRecognizer:
                     # Convert confidence to percentage (lower is better in LBPH)
                     confidence_percent = max(0, 100 - confidence)
                     
-                    if (confidence < config.RECOGNITION_CONFIDENCE_THRESHOLD and 
+                    if (confidence < self.config.RECOGNITION_CONFIDENCE_THRESHOLD and 
                         label in self.label_map):
                         student_id, name = self.label_map[label]
                         results.append({
