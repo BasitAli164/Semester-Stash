@@ -87,4 +87,6 @@ export interface ApiResponse<T = any> {
   status?: T;
   storage?: T;
   logs?: T;
+  images_captured?: number;
+
 }
