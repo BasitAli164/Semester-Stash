@@ -1,6 +1,14 @@
+# my code
 from flask import Blueprint, request, jsonify, send_file
 import os
-from ..services.attendance_service import AttendanceService
+import sys
+
+# Add the backend directory to Python path
+current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, current_dir)
+
+from services.attendance_service import AttendanceService
+
 
 # Create blueprint
 attendance_bp = Blueprint('attendance', __name__)
@@ -189,6 +197,94 @@ def get_model_status():
         return jsonify({
             'success': True,
             'model_ready': is_ready
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Server error: {str(e)}'
+        }), 500
+
+# Your code:
+from flask import Blueprint, request, jsonify
+
+# Create blueprint
+attendance_bp = Blueprint('attendance', __name__)
+
+@attendance_bp.route('/attendance/recognize', methods=['POST'])
+def recognize_faces():
+    """Recognize faces in image"""
+    try:
+        from services.attendance_service import AttendanceService
+        attendance_service = AttendanceService()
+        
+        data = request.get_json()
+        
+        if not data or 'image' not in data:
+            return jsonify({
+                'success': False,
+                'message': 'Image data is required'
+            }), 400
+        
+        success, message, results = attendance_service.recognize_faces(data['image'])
+        
+        return jsonify({
+            'success': success,
+            'message': message,
+            'results': results
+        }), 200 if success else 400
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Server error: {str(e)}'
+        }), 500
+
+@attendance_bp.route('/attendance/mark', methods=['POST'])
+def mark_attendance():
+    """Mark attendance for recognized students"""
+    try:
+        from services.attendance_service import AttendanceService
+        attendance_service = AttendanceService()
+        
+        data = request.get_json()
+        
+        if not data or 'recognized_faces' not in data:
+            return jsonify({
+                'success': False,
+                'message': 'Recognition results are required'
+            }), 400
+        
+        marked_count, detailed_results = attendance_service.mark_attendance_from_recognition(
+            data['recognized_faces']
+        )
+        
+        return jsonify({
+            'success': True,
+            'message': f'Attendance marked for {marked_count} students',
+            'marked_count': marked_count,
+            'detailed_results': detailed_results
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Server error: {str(e)}'
+        }), 500
+
+@attendance_bp.route('/attendance', methods=['GET'])
+def get_attendance():
+    """Get attendance records"""
+    try:
+        from services.attendance_service import AttendanceService
+        attendance_service = AttendanceService()
+        
+        date = request.args.get('date')
+        report = attendance_service.get_attendance_report(date)
+        
+        return jsonify({
+            'success': True,
+            'report': report
         }), 200
         
     except Exception as e:

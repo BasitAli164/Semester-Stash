@@ -3,21 +3,22 @@ import csv
 import shutil
 from pathlib import Path
 from typing import List, Dict, Tuple, Optional
-from ..config import config
 
 class FileManager:
     """Manages file system operations for the attendance system"""
     
     def __init__(self):
+        from config import config
+        self.config = config
         self._setup_directories()
     
     def _setup_directories(self):
         """Create necessary directories for the application"""
         directories = [
-            config.FACES_DIR,
-            config.MODELS_DIR, 
-            config.ATTENDANCE_DIR,
-            config.TEMP_DIR
+            self.config.FACES_DIR,
+            self.config.MODELS_DIR, 
+            self.config.ATTENDANCE_DIR,
+            self.config.TEMP_DIR
         ]
         
         for directory in directories:
@@ -25,7 +26,7 @@ class FileManager:
     
     def get_student_faces_dir(self, student_id: str) -> Path:
         """Get directory path for student's face images"""
-        return config.FACES_DIR / student_id
+        return self.config.FACES_DIR / student_id
     
     def create_student_directory(self, student_id: str) -> Path:
         """Create directory for student's face images"""
@@ -36,16 +37,24 @@ class FileManager:
     def save_face_image(self, student_id: str, face_image, image_index: int) -> Tuple[bool, str]:
         """Save face image to student's directory"""
         try:
+            import cv2
+            from PIL import Image
+            
             faces_dir = self.create_student_directory(student_id)
             image_path = faces_dir / f"face_{image_index:03d}.jpg"
             
             # Ensure the image is in the correct format
-            if isinstance(face_image, np.ndarray):
+            if isinstance(face_image, type(cv2.imread('test'))):  # Check if it's OpenCV image
                 success = cv2.imwrite(str(image_path), face_image)
             else:
-                # Assume it's a PIL Image
-                face_image.save(str(image_path), 'JPEG', quality=95)
-                success = True
+                # Assume it's a PIL Image or numpy array
+                if isinstance(face_image, Image.Image):
+                    face_image.save(str(image_path), 'JPEG', quality=95)
+                    success = True
+                else:
+                    # Assume it's numpy array
+                    import cv2
+                    success = cv2.imwrite(str(image_path), face_image)
             
             if success:
                 return True, str(image_path)
@@ -70,10 +79,10 @@ class FileManager:
         """Get all face images from all students with student IDs"""
         images = []
         
-        if not config.FACES_DIR.exists():
+        if not self.config.FACES_DIR.exists():
             return images
         
-        for student_dir in config.FACES_DIR.iterdir():
+        for student_dir in self.config.FACES_DIR.iterdir():
             if student_dir.is_dir():
                 student_id = student_dir.name
                 for image_path in student_dir.glob("face_*.jpg"):
@@ -85,13 +94,13 @@ class FileManager:
         """Save trained model and label mapping"""
         try:
             # Ensure models directory exists
-            config.MODELS_DIR.mkdir(parents=True, exist_ok=True)
+            self.config.MODELS_DIR.mkdir(parents=True, exist_ok=True)
             
             # Save model
-            recognizer.save(str(config.MODEL_FILE))
+            recognizer.save(str(self.config.MODEL_FILE))
             
             # Save label mapping
-            with open(config.LABEL_MAP_FILE, 'w', newline='', encoding='utf-8') as f:
+            with open(self.config.LABEL_MAP_FILE, 'w', newline='', encoding='utf-8') as f:
                 writer = csv.writer(f)
                 writer.writerow(['label', 'student_id', 'name'])
                 for label, (student_id, name) in label_map.items():
@@ -104,11 +113,11 @@ class FileManager:
     
     def model_exists(self) -> bool:
         """Check if trained model exists"""
-        return config.MODEL_FILE.exists() and config.LABEL_MAP_FILE.exists()
+        return self.config.MODEL_FILE.exists() and self.config.LABEL_MAP_FILE.exists()
     
     def get_model_files(self) -> Tuple[Path, Path]:
         """Get model file paths"""
-        return config.MODEL_FILE, config.LABEL_MAP_FILE
+        return self.config.MODEL_FILE, self.config.LABEL_MAP_FILE
     
     def cleanup_student_data(self, student_id: str) -> bool:
         """Remove all face data for a student"""
@@ -127,8 +136,8 @@ class FileManager:
         total_size = 0
         students_with_faces = 0
         
-        if config.FACES_DIR.exists():
-            for student_dir in config.FACES_DIR.iterdir():
+        if self.config.FACES_DIR.exists():
+            for student_dir in self.config.FACES_DIR.iterdir():
                 if student_dir.is_dir():
                     students_with_faces += 1
                     for image_path in student_dir.glob("*.jpg"):
@@ -138,8 +147,8 @@ class FileManager:
         
         # Model size
         model_size = 0
-        if config.MODEL_FILE.exists():
-            model_size = config.MODEL_FILE.stat().st_size
+        if self.config.MODEL_FILE.exists():
+            model_size = self.config.MODEL_FILE.stat().st_size
         
         return {
             'total_images': total_images,
@@ -153,16 +162,16 @@ class FileManager:
     def cleanup_temp_files(self):
         """Clean up temporary files"""
         try:
-            if config.TEMP_DIR.exists():
-                shutil.rmtree(config.TEMP_DIR)
-            config.TEMP_DIR.mkdir(exist_ok=True)
+            if self.config.TEMP_DIR.exists():
+                shutil.rmtree(self.config.TEMP_DIR)
+            self.config.TEMP_DIR.mkdir(exist_ok=True)
         except Exception as e:
             print(f"Error cleaning temp files: {e}")
     
     def export_attendance_csv(self, attendance_data: List[Dict], filename: str) -> str:
         """Export attendance data to CSV file"""
         try:
-            filepath = config.ATTENDANCE_DIR / filename
+            filepath = self.config.ATTENDANCE_DIR / filename
             
             with open(filepath, 'w', newline='', encoding='utf-8') as f:
                 writer = csv.writer(f)
@@ -187,8 +196,8 @@ class FileManager:
         """Get list of exported attendance files"""
         files = []
         
-        if config.ATTENDANCE_DIR.exists():
-            for file_path in config.ATTENDANCE_DIR.glob("*.csv"):
+        if self.config.ATTENDANCE_DIR.exists():
+            for file_path in self.config.ATTENDANCE_DIR.glob("*.csv"):
                 stat = file_path.stat()
                 files.append({
                     'filename': file_path.name,

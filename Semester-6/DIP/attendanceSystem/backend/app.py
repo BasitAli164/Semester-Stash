@@ -1,31 +1,19 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 import os
 import sys
+from datetime import datetime
 
-# Add the backend directory to Python path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
-from config import config
-
-# Import blueprints - using both individual and package imports for flexibility
-try:
-    # Try importing from the api package (preferred way)
-    from api import all_blueprints
-    USE_PACKAGE_IMPORTS = True
-except ImportError:
-    # Fallback to individual imports
-    from api.students import students_bp
-    from api.attendance import attendance_bp
-    from api.system import system_bp
-    USE_PACKAGE_IMPORTS = False
-    all_blueprints = [students_bp, attendance_bp, system_bp]
+# Add the current directory to Python path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, current_dir)
 
 def create_app():
     """Create and configure Flask application"""
     app = Flask(__name__)
     
-    # Configuration
+    # Import config after app creation to avoid circular imports
+    from config import config
     app.config.from_object(config)
     
     # CORS configuration
@@ -35,16 +23,14 @@ def create_app():
          allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
          supports_credentials=True)
     
-    # Register blueprints
-    if USE_PACKAGE_IMPORTS:
-        # Register all blueprints automatically from package
-        for blueprint in all_blueprints:
-            app.register_blueprint(blueprint, url_prefix='/api')
-    else:
-        # Register blueprints individually
-        app.register_blueprint(students_bp, url_prefix='/api')
-        app.register_blueprint(attendance_bp, url_prefix='/api')
-        app.register_blueprint(system_bp, url_prefix='/api')
+    # Import and register blueprints
+    from api.students import students_bp
+    from api.attendance import attendance_bp
+    from api.system import system_bp
+    
+    app.register_blueprint(students_bp, url_prefix='/api')
+    app.register_blueprint(attendance_bp, url_prefix='/api')
+    app.register_blueprint(system_bp, url_prefix='/api')
     
     # Root endpoint - API welcome and overview
     @app.route('/')
@@ -54,7 +40,7 @@ def create_app():
             'message': 'Smart Attendance System API',
             'version': '1.0.0',
             'status': 'running',
-            'timestamp': __import__('datetime').datetime.now().isoformat(),
+            'timestamp': datetime.now().isoformat(),
             'endpoints': {
                 'students': {
                     'register': 'POST /api/students',
@@ -377,7 +363,7 @@ def create_app():
             'success': True,
             'status': 'healthy',
             'service': 'Smart Attendance System API',
-            'timestamp': __import__('datetime').datetime.now().isoformat()
+            'timestamp': datetime.now().isoformat()
         })
     
     # Error handlers

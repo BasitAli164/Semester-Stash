@@ -1,8 +1,16 @@
+# my code
 from flask import Blueprint, request, jsonify
-from ..services.training_service import TrainingService
-from ..services.attendance_service import AttendanceService
-from ..utils.file_manager import FileManager
-from ..models.database import DatabaseManager
+import os
+import sys
+
+# Add the backend directory to Python path
+current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, current_dir)
+
+from services.training_service import TrainingService
+from services.attendance_service import AttendanceService
+from utils.file_manager import FileManager
+from models.database import DatabaseManager
 
 # Create blueprint
 system_bp = Blueprint('system', __name__)
@@ -190,4 +198,86 @@ def cleanup_system():
         return jsonify({
             'success': False,
             'message': f'Error during system cleanup: {str(e)}'
+        }), 500
+
+
+# Your code
+from flask import Blueprint, request, jsonify
+
+# Create blueprint
+system_bp = Blueprint('system', __name__)
+
+@system_bp.route('/system/health', methods=['GET'])
+def health_check():
+    """System health check"""
+    try:
+        return jsonify({
+            'success': True,
+            'status': 'healthy',
+            'timestamp': __import__('datetime').datetime.now().isoformat()
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'status': 'unhealthy',
+            'message': str(e)
+        }), 500
+
+@system_bp.route('/system/train', methods=['POST'])
+def train_model():
+    """Train the face recognition model"""
+    try:
+        from services.training_service import TrainingService
+        training_service = TrainingService()
+        
+        success, message, stats = training_service.train_model()
+        
+        return jsonify({
+            'success': success,
+            'message': message,
+            'stats': stats
+        }), 200 if success else 400
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Training error: {str(e)}'
+        }), 500
+
+@system_bp.route('/system/status', methods=['GET'])
+def system_status():
+    """Get complete system status"""
+    try:
+        from services.training_service import TrainingService
+        from services.attendance_service import AttendanceService
+        from utils.file_manager import FileManager
+        
+        training_service = TrainingService()
+        attendance_service = AttendanceService()
+        file_manager = FileManager()
+        
+        training_status = training_service.get_training_status()
+        storage_stats = file_manager.get_storage_stats()
+        model_ready = attendance_service.is_model_ready()
+        
+        status = {
+            'training': training_status,
+            'storage': storage_stats,
+            'attendance': {
+                'model_ready': model_ready
+            },
+            'database': {
+                'students_count': training_service.db.get_students_count()
+            }
+        }
+        
+        return jsonify({
+            'success': True,
+            'status': status
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Error getting system status: {str(e)}'
         }), 500

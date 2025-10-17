@@ -1,10 +1,8 @@
-import cv2
 import numpy as np
 from PIL import Image, ImageOps
 import io
 import base64
 from typing import List, Tuple, Optional
-from ..config import config
 
 class ImageProcessor:
     """Handles all image processing operations for the attendance system"""
@@ -48,6 +46,9 @@ class ImageProcessor:
     def detect_faces(image: Image.Image) -> Tuple[List[np.ndarray], List[Tuple[int, int, int, int]]]:
         """Detect faces in image and return face images and coordinates"""
         try:
+            import cv2
+            from config import config
+            
             # Convert PIL Image to numpy array
             image_array = np.array(image)
             
@@ -98,6 +99,8 @@ class ImageProcessor:
     def preprocess_face_image(face_image: np.ndarray, target_size: Tuple[int, int] = (200, 200)) -> np.ndarray:
         """Preprocess face image for training or recognition"""
         try:
+            import cv2
+            
             # Resize to target size
             face_image = cv2.resize(face_image, target_size)
             
@@ -116,6 +119,8 @@ class ImageProcessor:
     def draw_face_boxes(image: Image.Image, faces_data: List[Dict]) -> Image.Image:
         """Draw bounding boxes and labels on image for visualization"""
         try:
+            import cv2
+            
             # Convert PIL Image to OpenCV format (BGR)
             image_cv = np.array(image)
             if image_cv.shape[2] == 3:  # RGB
@@ -167,6 +172,8 @@ class ImageProcessor:
     @staticmethod
     def validate_image_size(base64_string: str, max_size: int = None) -> bool:
         """Validate image size against maximum allowed size"""
+        from config import config
+        
         if max_size is None:
             max_size = config.MAX_IMAGE_SIZE
         
@@ -209,6 +216,8 @@ class ImageProcessor:
     def enhance_image_quality(image: Image.Image) -> Image.Image:
         """Enhance image quality for better face detection"""
         try:
+            import cv2
+            
             # Convert to numpy array for OpenCV processing
             image_array = np.array(image)
             
