@@ -21,6 +21,7 @@ export interface AttendanceRecord {
   notes?: string;
   department?: string;
   email?: string;
+  date?: string;
 }
 
 export interface AttendanceReport {
@@ -81,12 +82,13 @@ export interface ApiResponse<T = any> {
   success: boolean;
   message?: string;
   data?: T;
+  results?: T;            
   students?: T;
   report?: T;
   stats?: T;
   status?: T;
   storage?: T;
   logs?: T;
-  images_captured?: number;
-
+  images_captured?: number; 
+  marked_count?: number;
 }
