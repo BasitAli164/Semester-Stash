@@ -1,4 +1,6 @@
+# backend/services/attendance_service.py
 from typing import List, Dict, Tuple, Optional
+from datetime import datetime, timedelta
 
 class AttendanceService:
     """Handles attendance-related business logic"""
@@ -152,7 +154,6 @@ class AttendanceService:
             while current_date <= end_date:
                 date_range.append(current_date)
                 # Increment date
-                from datetime import datetime, timedelta
                 current_dt = datetime.strptime(current_date, '%Y-%m-%d')
                 current_dt += timedelta(days=1)
                 current_date = current_dt.strftime('%Y-%m-%d')
@@ -241,10 +242,8 @@ class AttendanceService:
     
     def _get_current_date(self) -> str:
         """Get current date in YYYY-MM-DD format"""
-        from datetime import datetime
         return datetime.now().strftime('%Y-%m-%d')
     
     def _get_current_time(self) -> str:
         """Get current time in HH:MM:SS format"""
-        from datetime import datetime
         return datetime.now().strftime('%H:%M:%S')
