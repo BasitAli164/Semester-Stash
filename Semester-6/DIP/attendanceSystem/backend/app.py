@@ -369,6 +369,7 @@ def create_app():
     # Error handlers
     @app.errorhandler(400)
     def bad_request(error):
+        from config import config
         return jsonify({
             'success': False,
             'message': 'Bad request - check your input data',
@@ -377,6 +378,7 @@ def create_app():
     
     @app.errorhandler(404)
     def not_found(error):
+        from config import config
         return jsonify({
             'success': False,
             'message': 'Endpoint not found',
@@ -386,6 +388,7 @@ def create_app():
     
     @app.errorhandler(405)
     def method_not_allowed(error):
+        from config import config
         return jsonify({
             'success': False,
             'message': 'Method not allowed for this endpoint',
@@ -394,6 +397,7 @@ def create_app():
     
     @app.errorhandler(415)
     def unsupported_media_type(error):
+        from config import config
         return jsonify({
             'success': False,
             'message': 'Unsupported media type - please use application/json',
@@ -402,6 +406,7 @@ def create_app():
     
     @app.errorhandler(500)
     def internal_error(error):
+        from config import config
         return jsonify({
             'success': False,
             'message': 'Internal server error',
@@ -411,6 +416,7 @@ def create_app():
     # Handle generic exceptions
     @app.errorhandler(Exception)
     def handle_exception(error):
+        from config import config
         # Log the error
         if config.DEBUG:
             print(f"Unhandled exception: {error}")
@@ -426,6 +432,7 @@ def create_app():
     # Before request handler - for logging and pre-processing
     @app.before_request
     def before_request():
+        from config import config
         if config.DEBUG:
             print(f"Incoming request: {request.method} {request.path}")
     
@@ -449,6 +456,9 @@ def create_app():
 
 def main():
     """Main function to run the application"""
+    # Import config here to avoid the NameError
+    from config import config
+    
     app = create_app()
     
     # Print startup information
