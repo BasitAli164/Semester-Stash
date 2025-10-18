@@ -59,12 +59,115 @@ def get_student(student_id):
             'message': f'Server error: {str(e)}'
         }), 500
 
+# backend/api/students.py - Update the register_student endpoint
 @students_bp.route('/students', methods=['POST'])
 def register_student():
-    """Register new student"""
+    """Register new student with face images"""
+    try:
+        # Check if it's form data with images or JSON without images
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            # Handle form data with images
+            return register_student_with_images()
+        else:
+            # Handle JSON data (old way - just student info)
+            return register_student_basic()
+        
+    except Exception as e:
+        print(f"❌ Error in register_student: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'message': f'Server error: {str(e)}'
+        }), 500
+
+def register_student_with_images():
+    """Register student with face images from form data"""
+    try:
+        # Get form data
+        student_id = request.form.get('student_id')
+        name = request.form.get('name')
+        email = request.form.get('email')
+        department = request.form.get('department')
+        phone = request.form.get('phone')
+        
+        print(f"➕ Registering new student with images: {student_id} - {name}")
+        
+        # Validate required fields
+        required_fields = ['student_id', 'name', 'email', 'department']
+        for field in required_fields:
+            if not request.form.get(field) or not request.form.get(field).strip():
+                return jsonify({
+                    'success': False,
+                    'message': f'{field.replace("_", " ").title()} is required'
+                }), 400
+        
+        # Get uploaded images
+        images = request.files.getlist('images')
+        print(f"📸 Received {len(images)} images for student {student_id}")
+        
+        if len(images) == 0:
+            return jsonify({
+                'success': False,
+                'message': 'At least one face image is required'
+            }), 400
+        
+        from services.student_service import StudentService
+        student_service = StudentService()
+        
+        # Prepare student data
+        student_data = {
+            'student_id': student_id,
+            'name': name,
+            'email': email,
+            'department': department,
+            'phone': phone,
+            'images': images  # Pass images to service
+        }
+        
+        success, message = student_service.register_student_with_images(student_data)
+        
+        if success:
+            # Get the created student info
+            student = student_service.get_student_info(student_id)
+            
+            print(f"✅ Student registered successfully with images: {student_id}")
+            
+            return jsonify({
+                'success': True,
+                'message': message,
+                'student': student
+            }), 201
+        else:
+            print(f"❌ Student registration with images failed: {message}")
+            return jsonify({
+                'success': False,
+                'message': message
+            }), 400
+        
+    except Exception as e:
+        print(f"❌ Error in register_student_with_images: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'message': f'Server error: {str(e)}'
+        }), 500
+
+def register_student_basic():
+    """Register student without images (basic info only)"""
     try:
         data = request.get_json()
-        print(f"➕ Registering new student: {data}")
+        print(f"➕ Registering new student (basic): {data}")
+        
+        # Validate required fields
+        required_fields = ['student_id', 'name', 'email', 'department']
+        for field in required_fields:
+            if field not in data or not data[field].strip():
+                return jsonify({
+                    'success': False,
+                    'message': f'{field.replace("_", " ").title()} is required'
+                }), 400
         
         from services.student_service import StudentService
         student_service = StudentService()
@@ -76,24 +179,29 @@ def register_student():
             student_id = data['student_id']
             student = student_service.get_student_info(student_id)
             
+            print(f"✅ Student registered successfully (basic): {student_id}")
+            
             return jsonify({
                 'success': True,
                 'message': message,
                 'student': student
             }), 201
         else:
+            print(f"❌ Student registration (basic) failed: {message}")
             return jsonify({
                 'success': False,
                 'message': message
             }), 400
         
     except Exception as e:
-        print(f"❌ Error in register_student: {str(e)}")
+        print(f"❌ Error in register_student_basic: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'success': False,
             'message': f'Server error: {str(e)}'
         }), 500
-
+    
 @students_bp.route('/students/<student_id>', methods=['PUT'])
 def update_student(student_id):
     """Update student"""

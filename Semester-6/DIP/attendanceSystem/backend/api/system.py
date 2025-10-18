@@ -190,3 +190,77 @@ def cleanup_system():
             'success': False,
             'message': f'Error during system cleanup: {str(e)}'
         }), 500
+    
+@system_bp.route('/system/debug/students', methods=['GET'])
+def debug_students():
+    """Debug endpoint to check student registration and images"""
+    try:
+        from models.database import DatabaseManager
+        from config import config
+        import os
+        from pathlib import Path
+        
+        db = DatabaseManager()
+        
+        # Get all students
+        students = db.get_all_students(active_only=True)
+        
+        student_details = []
+        faces_dir = Path(config.FACES_DIR)
+        
+        print(f"🔍 Debug: Checking {len(students)} students")
+        print(f"📁 Faces directory: {faces_dir}")
+        print(f"📁 Directory exists: {faces_dir.exists()}")
+        
+        if faces_dir.exists():
+            print(f"📁 Directory contents: {list(faces_dir.iterdir())}")
+        
+        for student in students:
+            student_id = student['student_id']
+            student_name = student['name']
+            
+            # Check different possible image locations
+            image_locations = []
+            
+            # Location 1: Student subdirectory
+            student_dir = faces_dir / student_id
+            dir_exists = student_dir.exists()
+            
+            # Location 2: Flat files
+            pattern = f"{student_id}_*.jpg"
+            flat_files = list(faces_dir.glob(pattern))
+            
+            # Count images
+            image_count = 0
+            if dir_exists:
+                image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.webp'}
+                for ext in image_extensions:
+                    image_count += len(list(student_dir.glob(f"*{ext}")))
+                    image_count += len(list(student_dir.glob(f"*{ext.upper()}")))
+            else:
+                image_count = len(flat_files)
+            
+            student_details.append({
+                'student_id': student_id,
+                'name': student_name,
+                'images_count': image_count,
+                'faces_dir_exists': dir_exists,
+                'flat_files_count': len(flat_files),
+                'registration_date': student.get('registration_date', 'unknown')
+            })
+        
+        return jsonify({
+            'success': True,
+            'total_students': len(students),
+            'faces_directory': str(faces_dir),
+            'faces_directory_exists': faces_dir.exists(),
+            'students': student_details
+        }), 200
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500

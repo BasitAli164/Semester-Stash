@@ -30,7 +30,9 @@ export default function SystemPage() {
   }, [fetchSystemStatus, fetchTrainingStatus, fetchStorageStats]);
 
   const handleTrainModel = async () => {
+    console.log('🔄 Starting model training...');
     const success = await trainModel();
+    console.log('✅ Training result:', success);
     if (success) {
       setShowTrainingModal(false);
       // Refresh all statuses after training
@@ -40,9 +42,19 @@ export default function SystemPage() {
     }
   };
 
+  const handleOpenTrainingModal = () => {
+    console.log('🎯 Opening training modal');
+    console.log('📊 Current training status:', trainingStatus);
+    setShowTrainingModal(true);
+  };
+
   const canTrain = trainingStatus?.can_train || false;
   const readyStudents = trainingStatus?.ready_students || 0;
   const totalStudents = trainingStatus?.total_students || 0;
+
+  console.log('📊 System page render - showTrainingModal:', showTrainingModal);
+  console.log('📊 Training status:', trainingStatus);
+  console.log('📊 Can train:', canTrain);
 
   return (
     <div className="space-y-6">
@@ -54,9 +66,10 @@ export default function SystemPage() {
             Monitor system health and manage face recognition model
           </p>
         </div>
+        {/* REMOVE the disabled prop to allow clicking even when can_train is false */}
         <Button 
-          onClick={() => setShowTrainingModal(true)}
-          disabled={!canTrain}
+          onClick={handleOpenTrainingModal}
+          // Remove disabled prop to allow clicking
         >
           Train Model
         </Button>
@@ -89,12 +102,12 @@ export default function SystemPage() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-4">
+            {/* REMOVE disabled prop here too */}
             <Button
-              onClick={() => setShowTrainingModal(true)}
-              disabled={!canTrain}
+              onClick={handleOpenTrainingModal}
               variant="outline"
             >
-              {canTrain ? 'Train Model' : 'Not Ready to Train'}
+              Train Model
             </Button>
             <Button
               onClick={() => {
@@ -120,7 +133,10 @@ export default function SystemPage() {
       {showTrainingModal && (
         <TrainingModal
           trainingStatus={trainingStatus}
-          onClose={() => setShowTrainingModal(false)}
+          onClose={() => {
+            console.log('🔒 Closing training modal');
+            setShowTrainingModal(false);
+          }}
           onTrain={handleTrainModel}
         />
       )}
