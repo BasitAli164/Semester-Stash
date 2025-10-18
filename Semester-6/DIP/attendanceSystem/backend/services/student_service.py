@@ -1,5 +1,7 @@
 # backend/services/student_service.py
 from typing import List, Dict, Tuple, Optional
+import os
+from pathlib import Path
 
 class StudentService:
     """Handles student-related business logic"""
@@ -8,20 +10,96 @@ class StudentService:
         from models.database import DatabaseManager
         from utils.file_manager import FileManager
         from utils.image_processor import ImageProcessor
+        from config import config
         
         self.db = DatabaseManager()
         self.file_manager = FileManager()
         self.image_processor = ImageProcessor()
+        self.config = config
     
     def register_student(self, student_data: Dict) -> Tuple[bool, str]:
-        """Register a new student"""
+        """Register a new student without images"""
+        try:
+            student_id = student_data.get('student_id', '').strip()
+            name = student_data.get('name', '').strip()
+            email = student_data.get('email', '').strip() or None
+            department = student_data.get('department', '').strip() or None
+            phone = student_data.get('phone', '').strip() or None
+            
+            # Validation
+            if not student_id:
+                return False, "Student ID is required"
+            
+            if not name:
+                return False, "Student name is required"
+            
+            if len(student_id) > 20:
+                return False, "Student ID must be 20 characters or less"
+            
+            if len(name) > 100:
+                return False, "Student name must be 100 characters or less"
+            
+            # Check if student ID contains only alphanumeric characters
+            if not student_id.replace('_', '').replace('-', '').isalnum():
+                return False, "Student ID can only contain letters, numbers, hyphens, and underscores"
+            
+            print(f"🎯 Registering student (basic): {student_id}")
+            return self.db.add_student(student_id, name, email, department, phone)
+            
+        except Exception as e:
+            print(f"❌ Error registering student: {str(e)}")
+            return False, f"Registration failed: {str(e)}"
+    
+    def register_student_with_images(self, student_data: Dict) -> Tuple[bool, str]:
+        """Register student with face images"""
+        try:
+            student_id = student_data['student_id']
+            name = student_data['name']
+            email = student_data['email']
+            department = student_data['department']
+            phone = student_data.get('phone')
+            images = student_data.get('images', [])
+            
+            print(f"🎯 Registering student {student_id} with {len(images)} images")
+            
+            # Validate student data first
+            validation_result = self._validate_student_data({
+                'student_id': student_id,
+                'name': name,
+                'email': email,
+                'department': department,
+                'phone': phone
+            })
+            
+            if not validation_result[0]:
+                return validation_result
+            
+            # Register student in database
+            success, message = self.db.add_student(student_id, name, email, department, phone)
+            if not success:
+                return False, message
+            
+            # Save face images
+            if images:
+                saved_count = self._save_student_images(student_id, images)
+                print(f"💾 Saved {saved_count} images for student {student_id}")
+                
+                if saved_count == 0:
+                    return False, "Failed to save any face images"
+                
+                return True, f"Student registered successfully with {saved_count} face images"
+            else:
+                return True, "Student registered successfully (no images provided)"
+                
+        except Exception as e:
+            print(f"❌ Error registering student with images: {str(e)}")
+            return False, f"Registration failed: {str(e)}"
+    
+    def _validate_student_data(self, student_data: Dict) -> Tuple[bool, str]:
+        """Validate student data"""
         student_id = student_data.get('student_id', '').strip()
         name = student_data.get('name', '').strip()
-        email = student_data.get('email', '').strip() or None
-        department = student_data.get('department', '').strip() or None
-        phone = student_data.get('phone', '').strip() or None
         
-        # Validation
         if not student_id:
             return False, "Student ID is required"
         
@@ -38,10 +116,46 @@ class StudentService:
         if not student_id.replace('_', '').replace('-', '').isalnum():
             return False, "Student ID can only contain letters, numbers, hyphens, and underscores"
         
-        return self.db.add_student(student_id, name, email, department, phone)
+        return True, "Valid"
+    
+    def _save_student_images(self, student_id: str, images) -> int:
+        """Save student face images to filesystem"""
+        try:
+            # Create student directory
+            student_dir = Path(self.config.FACES_DIR) / student_id
+            student_dir.mkdir(parents=True, exist_ok=True)
+            
+            saved_count = 0
+            
+            for i, image_file in enumerate(images):
+                try:
+                    # Generate filename
+                    filename = f"face_{i+1}.jpg"
+                    file_path = student_dir / filename
+                    
+                    # Save the image
+                    image_file.save(str(file_path))
+                    
+                    # Verify the file was saved
+                    if file_path.exists() and file_path.stat().st_size > 0:
+                        saved_count += 1
+                        print(f"   ✅ Saved image: {file_path}")
+                    else:
+                        print(f"   ❌ Failed to save image: {file_path}")
+                        
+                except Exception as e:
+                    print(f"   ❌ Error saving image {i+1}: {str(e)}")
+                    continue
+            
+            print(f"💾 Successfully saved {saved_count}/{len(images)} images for {student_id}")
+            return saved_count
+            
+        except Exception as e:
+            print(f"❌ Error in _save_student_images: {str(e)}")
+            return 0
     
     def capture_face_images(self, student_id: str, image_data: str) -> Tuple[bool, str, int]:
-        """Capture and save face images for a student"""
+        """Capture and save face images for a student using base64 image data"""
         try:
             # Validate student exists
             student = self.db.get_student(student_id)
@@ -88,6 +202,29 @@ class StudentService:
             return False, str(e), 0
         except Exception as e:
             return False, f"Error capturing faces: {str(e)}", 0
+    
+    def add_student_images(self, student_id: str, images) -> Tuple[bool, str, int]:
+        """Add images to existing student"""
+        try:
+            # Validate student exists
+            student = self.db.get_student(student_id)
+            if not student:
+                return False, "Student not found", 0
+            
+            if not images:
+                return False, "No images provided", 0
+            
+            # Save images
+            saved_count = self._save_student_images(student_id, images)
+            
+            if saved_count > 0:
+                return True, f"Successfully added {saved_count} face images to student", saved_count
+            else:
+                return False, "Failed to save any images", 0
+                
+        except Exception as e:
+            print(f"❌ Error adding student images: {str(e)}")
+            return False, f"Error adding images: {str(e)}", 0
     
     def get_student_info(self, student_id: str) -> Optional[Dict]:
         """Get complete student information"""
@@ -174,3 +311,26 @@ class StudentService:
             'avg_images_per_student': round(total_face_images / students_with_faces, 2) if students_with_faces > 0 else 0,
             'coverage_rate': round((students_with_faces / total_students) * 100, 2) if total_students > 0 else 0
         }
+    
+    def get_student_images_info(self, student_id: str) -> Dict:
+        """Get detailed information about student's face images"""
+        try:
+            student = self.db.get_student(student_id)
+            if not student:
+                return {'error': 'Student not found'}
+            
+            image_count = self.file_manager.count_student_images(student_id)
+            image_paths = self.file_manager.get_student_image_paths(student_id)
+            
+            return {
+                'student_id': student_id,
+                'name': student['name'],
+                'total_images': image_count,
+                'image_paths': image_paths,
+                'meets_minimum': image_count >= self.config.MIN_IMAGES_FOR_TRAINING,
+                'minimum_required': self.config.MIN_IMAGES_FOR_TRAINING,
+                'status': 'ready' if image_count >= self.config.MIN_IMAGES_FOR_TRAINING else 'needs_more_images'
+            }
+            
+        except Exception as e:
+            return {'error': str(e)}

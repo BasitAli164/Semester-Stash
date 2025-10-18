@@ -6,6 +6,7 @@ import { useAppStore } from '@/store/store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useRouter } from 'next/navigation';
 
 interface StudentFormModalProps {
   student?: Student | null;
@@ -36,6 +37,7 @@ export function StudentFormModal({ student, onClose, onSuccess }: StudentFormMod
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   const { registerStudent, updateStudent } = useAppStore();
 
@@ -159,35 +161,80 @@ export function StudentFormModal({ student, onClose, onSuccess }: StudentFormMod
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) return;
-
-    setIsSubmitting(true);
-
-    try {
-      const submitData = {
-        ...formData,
-        images: [...capturedImages, ...uploadedImages]
-      };
-
-      const success = student 
-        ? await updateStudent(student.student_id, submitData)
-        : await registerStudent(submitData);
-
-      if (success) {
-        onSuccess();
-      } else {
-        alert('Failed to save student. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error saving student:', error);
-      alert('An error occurred. Please try again.');
-    } finally {
-      setIsSubmitting(false);
+  // Helper function to convert base64 to blob
+  const dataURLtoBlob = (dataURL: string): Blob => {
+    const byteString = atob(dataURL.split(',')[1]);
+    const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
     }
+    return new Blob([ab], { type: mimeString });
   };
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  
+  if (!validateForm()) return;
+
+  setIsSubmitting(true);
+
+  try {
+    // Create FormData to send both student data and images
+    const formDataToSend = new FormData();
+    
+    // Add student data - ensure all required fields are strings
+    formDataToSend.append('student_id', formData.student_id || '');
+    formDataToSend.append('name', formData.name || '');
+    formDataToSend.append('email', formData.email || '');
+    formDataToSend.append('department', formData.department || '');
+    if (formData.phone) {
+      formDataToSend.append('phone', formData.phone);
+    }
+    
+    // Add images
+    const allImages = [...capturedImages, ...uploadedImages];
+    if (allImages.length === 0) {
+      alert('Please capture or upload at least one face image');
+      setIsSubmitting(false);
+      return;
+    }
+    
+    allImages.forEach((image, index) => {
+      if (typeof image === 'string') {
+        // Convert base64 to blob
+        const blob = dataURLtoBlob(image);
+        formDataToSend.append('images', blob, `face_${index + 1}.jpg`);
+      } else {
+        // It's already a File object
+        formDataToSend.append('images', image);
+      }
+    });
+
+    console.log(`📤 Registering student with ${allImages.length} images...`);
+
+    // Fix: Use the correct backend URL (port 5000)
+    const response = await fetch('http://localhost:5000/api/students', {
+      method: 'POST',
+      body: formDataToSend,
+      // Don't set Content-Type header - let browser set it with boundary
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      console.log('✅ Student registered successfully with images');
+      onSuccess();
+    } else {
+      alert(`Failed to register student: ${result.message}`);
+    }
+  } catch (error) {
+    console.error('Error registering student:', error);
+    alert('An error occurred. Please try again.');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   const handleChange = (field: keyof StudentFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));

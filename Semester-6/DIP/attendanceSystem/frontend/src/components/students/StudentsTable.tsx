@@ -1,7 +1,8 @@
-'use client';
+"use client";
 
-import { Student } from '@/types';
-import { Button } from '@/components/ui/button';
+import { Student } from "@/types";
+import { Button } from "@/components/ui/button";
+import { Eye, Edit, Trash2 } from "lucide-react";
 
 interface StudentsTableProps {
   students: Student[];
@@ -9,6 +10,7 @@ interface StudentsTableProps {
   error: string | null;
   onEditStudent: (student: Student) => void;
   onViewDetails: (student: Student) => void;
+  onDeleteStudent: (student: Student) => void;
 }
 
 export function StudentsTable({
@@ -16,7 +18,8 @@ export function StudentsTable({
   loading,
   error,
   onEditStudent,
-  onViewDetails
+  onViewDetails,
+  onDeleteStudent,
 }: StudentsTableProps) {
   if (loading) {
     return (
@@ -30,9 +33,7 @@ export function StudentsTable({
     return (
       <div className="text-center py-8">
         <p className="text-red-600 mb-4">Error: {error}</p>
-        <Button onClick={() => window.location.reload()}>
-          Try Again
-        </Button>
+        <Button onClick={() => window.location.reload()}>Try Again</Button>
       </div>
     );
   }
@@ -41,9 +42,13 @@ export function StudentsTable({
     return (
       <div className="text-center py-8">
         <div className="text-4xl mb-4">👨‍🎓</div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No students found</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">
+          No students found
+        </h3>
         <p className="text-gray-500 mb-4">
-          {students.length === 0 ? 'No students have been registered yet.' : 'No students match your search criteria.'}
+          {students.length === 0
+            ? "No students have been registered yet."
+            : "No students match your search criteria."}
         </p>
       </div>
     );
@@ -54,12 +59,24 @@ export function StudentsTable({
       <table className="w-full">
         <thead>
           <tr className="border-b border-gray-200">
-            <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">Student</th>
-            <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">ID</th>
-            <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">Department</th>
-            <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">Face Images</th>
-            <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">Status</th>
-            <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">Actions</th>
+            <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
+              Student
+            </th>
+            <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
+              ID
+            </th>
+            <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
+              Department
+            </th>
+            <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
+              Face Images
+            </th>
+            <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
+              Status
+            </th>
+            <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
+              Actions
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
@@ -82,13 +99,19 @@ export function StudentsTable({
                 </code>
               </td>
               <td className="py-4 px-4">
-                <span className="text-sm text-gray-700">{student.department}</span>
+                <span className="text-sm text-gray-700">
+                  {student.department}
+                </span>
               </td>
               <td className="py-4 px-4">
                 <div className="flex items-center">
-                  <span className={`text-sm font-medium ${
-                    student.face_images_captured >= 5 ? 'text-green-600' : 'text-yellow-600'
-                  }`}>
+                  <span
+                    className={`text-sm font-medium ${
+                      student.face_images_captured >= 5
+                        ? "text-green-600"
+                        : "text-yellow-600"
+                    }`}
+                  >
                     {student.face_images_captured} / 5
                   </span>
                   {student.face_images_captured < 5 && (
@@ -99,29 +122,44 @@ export function StudentsTable({
                 </div>
               </td>
               <td className="py-4 px-4">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  student.is_active 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {student.is_active ? 'Active' : 'Inactive'}
+                <span
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    student.is_active
+                      ? "bg-green-100 text-green-800"
+                      : "bg-red-100 text-red-800"
+                  }`}
+                >
+                  {student.is_active ? "Active" : "Inactive"}
                 </span>
               </td>
               <td className="py-4 px-4">
                 <div className="flex space-x-2">
                   <Button
-                    variant="outline"
-                    size="sm"
+                    variant="ghost"
+                    size="icon"
                     onClick={() => onViewDetails(student)}
+                    className="h-8 w-8 text-blue-600 hover:text-blue-800 hover:bg-blue-100"
                   >
-                    View
+                    <Eye className="h-4 w-4" />
+                    <span className="sr-only">View details</span>
                   </Button>
                   <Button
-                    variant="outline"
-                    size="sm"
+                    variant="ghost"
+                    size="icon"
                     onClick={() => onEditStudent(student)}
+                    className="h-8 w-8 text-green-600 hover:text-green-800 hover:bg-green-100"
                   >
-                    Edit
+                    <Edit className="h-4 w-4" />
+                    <span className="sr-only">Edit student</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onDeleteStudent(student)}
+                    className="h-8 w-8 text-red-600 hover:text-red-800 hover:bg-red-100"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    <span className="sr-only">Delete student</span>
                   </Button>
                 </div>
               </td>

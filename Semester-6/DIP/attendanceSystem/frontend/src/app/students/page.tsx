@@ -13,13 +13,17 @@ export default function StudentsPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [showFormModal, setShowFormModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [editingStudent, setEditingStudent] = useState<any>(null);
+  const [deletingStudent, setDeletingStudent] = useState<any>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const { 
     students, 
     studentsLoading, 
     studentsError,
-    fetchStudents 
+    fetchStudents,
+    deleteStudent 
   } = useAppStore();
 
   useEffect(() => {
@@ -40,6 +44,33 @@ export default function StudentsPage() {
   const handleAddStudent = () => {
     setEditingStudent(null);
     setShowFormModal(true);
+  };
+
+  const handleDeleteStudent = (student: any) => {
+    setDeletingStudent(student);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (deletingStudent) {
+      setIsDeleting(true);
+      const success = await deleteStudent(deletingStudent.student_id);
+      setIsDeleting(false);
+      
+      if (success) {
+        setShowDeleteModal(false);
+        setDeletingStudent(null);
+        // Refresh the students list
+        fetchStudents(true);
+      } else {
+        alert('Failed to delete student. Please try again.');
+      }
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setDeletingStudent(null);
   };
 
   const handleFormSuccess = () => {
@@ -169,6 +200,7 @@ export default function StudentsPage() {
             loading={studentsLoading}
             error={studentsError}
             onEditStudent={handleEditStudent}
+            onDeleteStudent={handleDeleteStudent}
             onViewDetails={(student) => router.push(`/students/${student.student_id}`)}
           />
         </CardContent>
@@ -181,6 +213,45 @@ export default function StudentsPage() {
           onClose={() => setShowFormModal(false)}
           onSuccess={handleFormSuccess}
         />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && deletingStudent && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg w-full max-w-md">
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mr-3">
+                  <span className="text-red-600 text-xl">⚠️</span>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Delete Student</h3>
+              </div>
+              
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete <strong>{deletingStudent.name}</strong> ({deletingStudent.student_id})? 
+                This action cannot be undone and will remove all associated data.
+              </p>
+              
+              <div className="flex justify-end space-x-3">
+                <Button
+                  variant="outline"
+                  onClick={handleCancelDelete}
+                  disabled={isDeleting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleConfirmDelete}
+                  loading={isDeleting}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? 'Deleting...' : 'Delete'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
