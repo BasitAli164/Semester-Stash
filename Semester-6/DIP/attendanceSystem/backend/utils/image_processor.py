@@ -1,3 +1,4 @@
+# backend/utils/image_processor.py
 import numpy as np
 from PIL import Image, ImageOps
 import io
@@ -7,8 +8,11 @@ from typing import List, Tuple, Optional
 class ImageProcessor:
     """Handles all image processing operations for the attendance system"""
     
-    @staticmethod
-    def base64_to_image(base64_string: str) -> Image.Image:
+    def __init__(self):
+        from config import config
+        self.config = config
+    
+    def base64_to_image(self, base64_string: str) -> Image.Image:
         """Convert base64 string to PIL Image"""
         try:
             # Remove data URL prefix if present
@@ -30,8 +34,7 @@ class ImageProcessor:
         except Exception as e:
             raise ValueError(f"Error decoding base64 image: {str(e)}")
     
-    @staticmethod
-    def image_to_base64(image: Image.Image, format: str = 'JPEG', quality: int = 85) -> str:
+    def image_to_base64(self, image: Image.Image, format: str = 'JPEG', quality: int = 85) -> str:
         """Convert PIL Image to base64 string"""
         try:
             buffer = io.BytesIO()
@@ -42,12 +45,10 @@ class ImageProcessor:
         except Exception as e:
             raise ValueError(f"Error encoding image to base64: {str(e)}")
     
-    @staticmethod
-    def detect_faces(image: Image.Image) -> Tuple[List[np.ndarray], List[Tuple[int, int, int, int]]]:
+    def detect_faces(self, image: Image.Image) -> Tuple[List[np.ndarray], List[Tuple[int, int, int, int]]]:
         """Detect faces in image and return face images and coordinates"""
         try:
             import cv2
-            from config import config
             
             # Convert PIL Image to numpy array
             image_array = np.array(image)
@@ -69,9 +70,9 @@ class ImageProcessor:
             # Detect faces
             faces = face_cascade.detectMultiScale(
                 gray_array,
-                scaleFactor=config.FACE_DETECTION_SCALE_FACTOR,
-                minNeighbors=config.FACE_DETECTION_MIN_NEIGHBORS,
-                minSize=config.FACE_DETECTION_MIN_SIZE
+                scaleFactor=self.config.FACE_DETECTION_SCALE_FACTOR,
+                minNeighbors=self.config.FACE_DETECTION_MIN_NEIGHBORS,
+                minSize=self.config.FACE_DETECTION_MIN_SIZE
             )
             
             face_images = []
@@ -95,8 +96,7 @@ class ImageProcessor:
         except Exception as e:
             raise ValueError(f"Face detection failed: {str(e)}")
     
-    @staticmethod
-    def preprocess_face_image(face_image: np.ndarray, target_size: Tuple[int, int] = (200, 200)) -> np.ndarray:
+    def preprocess_face_image(self, face_image: np.ndarray, target_size: Tuple[int, int] = (200, 200)) -> np.ndarray:
         """Preprocess face image for training or recognition"""
         try:
             import cv2
@@ -115,8 +115,7 @@ class ImageProcessor:
         except Exception as e:
             raise ValueError(f"Face preprocessing failed: {str(e)}")
     
-    @staticmethod
-    def draw_face_boxes(image: Image.Image, faces_data: List[Dict]) -> Image.Image:
+    def draw_face_boxes(self, image: Image.Image, faces_data: List[Dict]) -> Image.Image:
         """Draw bounding boxes and labels on image for visualization"""
         try:
             import cv2
@@ -169,13 +168,10 @@ class ImageProcessor:
         except Exception as e:
             raise ValueError(f"Error drawing face boxes: {str(e)}")
     
-    @staticmethod
-    def validate_image_size(base64_string: str, max_size: int = None) -> bool:
+    def validate_image_size(self, base64_string: str, max_size: int = None) -> bool:
         """Validate image size against maximum allowed size"""
-        from config import config
-        
         if max_size is None:
-            max_size = config.MAX_IMAGE_SIZE
+            max_size = self.config.MAX_IMAGE_SIZE
         
         try:
             if ',' in base64_string:
@@ -189,8 +185,7 @@ class ImageProcessor:
         except Exception:
             return False
     
-    @staticmethod
-    def compress_image(image: Image.Image, max_size: Tuple[int, int] = (800, 600), 
+    def compress_image(self, image: Image.Image, max_size: Tuple[int, int] = (800, 600), 
                       quality: int = 85) -> Image.Image:
         """Compress image to reduce size while maintaining quality"""
         try:
@@ -212,8 +207,7 @@ class ImageProcessor:
         except Exception as e:
             raise ValueError(f"Image compression failed: {str(e)}")
     
-    @staticmethod
-    def enhance_image_quality(image: Image.Image) -> Image.Image:
+    def enhance_image_quality(self, image: Image.Image) -> Image.Image:
         """Enhance image quality for better face detection"""
         try:
             import cv2

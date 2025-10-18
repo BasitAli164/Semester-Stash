@@ -1,4 +1,4 @@
-import { useAttendanceStore } from '@/store/attendanceStore';
+import { useAttendanceStore } from '@/store/store';
 import { studentsApi, attendanceApi, systemApi } from '@/lib/api';
 import { useCallback } from 'react';
 

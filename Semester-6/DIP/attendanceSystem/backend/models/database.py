@@ -1,3 +1,4 @@
+# backend/models/database.py
 import sqlite3
 import datetime
 from pathlib import Path
@@ -83,7 +84,7 @@ class DatabaseManager:
         try:
             with self._get_connection() as conn:
                 cursor = conn.cursor()
-                registration_date = datetime.datetime.now().isoformat()
+                registration_date = datetime.datetime.now().strftime('%Y-%m-%d')
                 
                 cursor.execute('''
                     INSERT INTO students 
@@ -111,7 +112,7 @@ class DatabaseManager:
                 cursor = conn.cursor()
                 cursor.execute('''
                     SELECT * FROM students 
-                    WHERE student_id = ? AND is_active = 1
+                    WHERE student_id = ?
                 ''', (student_id,))
                 
                 row = cursor.fetchone()
@@ -130,7 +131,7 @@ class DatabaseManager:
                 if active_only:
                     cursor.execute('''
                         SELECT student_id, name, email, department, phone, 
-                               registration_date, created_at
+                               registration_date, created_at, is_active
                         FROM students 
                         WHERE is_active = 1 
                         ORDER BY name

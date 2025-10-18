@@ -1,3 +1,4 @@
+# backend/api/attendance.py
 from flask import Blueprint, request, jsonify, send_file
 import os
 from typing import Dict, List, Tuple, Any
@@ -8,33 +9,33 @@ attendance_bp = Blueprint('attendance', __name__)
 
 @attendance_bp.route('/attendance/recognize', methods=['POST'])
 def recognize_faces():
-    """Recognize faces in image - TEMPORARY MOCK VERSION"""
+    """Recognize faces in image"""
     try:
         print("📸 Face recognition endpoint called")
+        data = request.get_json()
         
-        # TEMPORARY: Return mock data for testing
-        mock_results = [
-            {
-                'student_id': 'STU001',
-                'name': 'John Doe',
-                'confidence': 92.5,
-                'status': 'recognized'
-            },
-            {
-                'student_id': 'unknown_1',
-                'name': 'Unknown Person',
-                'confidence': 45.2,
-                'status': 'unknown'
-            }
-        ]
+        if not data or 'image' not in data:
+            return jsonify({
+                'success': False,
+                'message': 'Image data is required'
+            }), 400
         
-        print(f"✅ Returning mock data: {len(mock_results)} faces detected")
+        from services.attendance_service import AttendanceService
+        attendance_service = AttendanceService()
         
-        return jsonify({
-            'success': True,
-            'message': f'Detected {len(mock_results)} faces: 1 recognized, 1 unknown',
-            'results': mock_results
-        }), 200
+        success, message, results = attendance_service.recognize_faces(data['image'])
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': message,
+                'results': results
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'message': message
+            }), 400
         
     except Exception as e:
         print(f"❌ Error in recognize_faces: {str(e)}")
@@ -45,25 +46,27 @@ def recognize_faces():
 
 @attendance_bp.route('/attendance/mark', methods=['POST'])
 def mark_attendance():
-    """Mark attendance for recognized students - TEMPORARY MOCK VERSION"""
+    """Mark attendance for recognized students"""
     try:
         data = request.get_json()
         print(f"📝 Marking attendance for {len(data.get('recognized_faces', []))} students")
         
-        # TEMPORARY: Return mock success response
+        if not data or 'recognized_faces' not in data:
+            return jsonify({
+                'success': False,
+                'message': 'Recognized faces data is required'
+            }), 400
+        
+        from services.attendance_service import AttendanceService
+        attendance_service = AttendanceService()
+        
+        marked_count, detailed_results = attendance_service.mark_attendance_from_recognition(data['recognized_faces'])
+        
         return jsonify({
             'success': True,
-            'message': f'Attendance marked for 1 student',
-            'marked_count': 1,
-            'detailed_results': [
-                {
-                    'student_id': 'STU001',
-                    'name': 'John Doe',
-                    'attendance_marked': True,
-                    'attendance_message': 'Attendance marked successfully',
-                    'attendance_time': datetime.now().strftime('%H:%M:%S')
-                }
-            ]
+            'message': f'Attendance marked for {marked_count} student(s)',
+            'marked_count': marked_count,
+            'detailed_results': detailed_results
         }), 200
         
     except Exception as e:
@@ -85,14 +88,25 @@ def mark_manual_attendance():
                 'message': 'Student ID is required'
             }), 400
         
-        student_id = data['student_id']
-        status = data.get('status', 'present')
+        from services.attendance_service import AttendanceService
+        attendance_service = AttendanceService()
         
-        # TEMPORARY: Return mock success
-        return jsonify({
-            'success': True,
-            'message': f'Manual attendance marked for {student_id}'
-        }), 200
+        success, message = attendance_service.mark_manual_attendance(
+            data['student_id'],
+            data.get('status', 'present'),
+            data.get('notes')
+        )
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': message
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'message': message
+            }), 400
         
     except Exception as e:
         return jsonify({
@@ -106,42 +120,14 @@ def get_attendance():
     try:
         date = request.args.get('date', datetime.now().strftime('%Y-%m-%d'))
         
-        # TEMPORARY: Return mock attendance data
-        mock_attendance = [
-            {
-                'id': 1,
-                'student_id': 'STU001',
-                'name': 'John Doe',
-                'date': date,
-                'time': '09:15:00',
-                'status': 'present',
-                'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            },
-            {
-                'id': 2,
-                'student_id': 'STU002', 
-                'name': 'Jane Smith',
-                'date': date,
-                'time': '09:16:00',
-                'status': 'present',
-                'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            }
-        ]
+        from services.attendance_service import AttendanceService
+        attendance_service = AttendanceService()
+        
+        report = attendance_service.get_attendance_report(date)
         
         return jsonify({
             'success': True,
-            'report': {
-                'attendance': mock_attendance,
-                'absent_students': [],
-                'stats': {
-                    'total_students': 2,
-                    'present_today': 2,
-                    'absent_today': 0,
-                    'attendance_rate': 100.0
-                },
-                'date': date,
-                'total_records': 2
-            }
+            'report': report
         }), 200
         
     except Exception as e:
@@ -156,19 +142,14 @@ def get_attendance_stats():
     try:
         date = request.args.get('date', datetime.now().strftime('%Y-%m-%d'))
         
-        # TEMPORARY: Return mock stats
-        mock_stats = {
-            'total_students': 50,
-            'present_today': 45,
-            'absent_today': 5,
-            'late_today': 2,
-            'attendance_rate': 90.0,
-            'weekly_trend': 2.5
-        }
+        from services.attendance_service import AttendanceService
+        attendance_service = AttendanceService()
+        
+        stats = attendance_service.get_attendance_stats(date)
         
         return jsonify({
             'success': True,
-            'stats': mock_stats
+            'stats': stats
         }), 200
         
     except Exception as e:
@@ -190,18 +171,14 @@ def get_attendance_range():
                 'message': 'Both start_date and end_date are required'
             }), 400
         
-        # TEMPORARY: Return empty range data
+        from services.attendance_service import AttendanceService
+        attendance_service = AttendanceService()
+        
+        report = attendance_service.get_attendance_range_report(start_date, end_date)
+        
         return jsonify({
             'success': True,
-            'report': {
-                'start_date': start_date,
-                'end_date': end_date,
-                'total_days': 7,
-                'total_students': 50,
-                'student_attendance': {},
-                'daily_attendance': [],
-                'date_range': []
-            }
+            'report': report
         }), 200
         
     except Exception as e:
@@ -216,11 +193,18 @@ def export_attendance():
     try:
         date = request.args.get('date', datetime.now().strftime('%Y-%m-%d'))
         
-        # TEMPORARY: Return mock export message
-        return jsonify({
-            'success': True,
-            'message': 'Export feature will be available soon'
-        }), 200
+        from services.attendance_service import AttendanceService
+        attendance_service = AttendanceService()
+        
+        success, message, filepath = attendance_service.export_attendance(date)
+        
+        if success:
+            return send_file(filepath, as_attachment=True, download_name=f"attendance_{date}.csv")
+        else:
+            return jsonify({
+                'success': False,
+                'message': message
+            }), 400
         
     except Exception as e:
         return jsonify({
@@ -232,10 +216,14 @@ def export_attendance():
 def get_model_status():
     """Check if face recognition model is ready"""
     try:
-        # TEMPORARY: Return mock status
+        from services.attendance_service import AttendanceService
+        attendance_service = AttendanceService()
+        
+        model_ready = attendance_service.is_model_ready()
+        
         return jsonify({
             'success': True,
-            'model_ready': True
+            'model_ready': model_ready
         }), 200
         
     except Exception as e:

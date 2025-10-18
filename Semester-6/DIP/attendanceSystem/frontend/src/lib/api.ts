@@ -1,4 +1,32 @@
+// lib/api.ts
 import axios from 'axios';
+import { 
+  Student, 
+  StudentFormData, 
+  AttendanceReport, 
+  RecognitionResponse, 
+  MarkAttendanceResponse,
+  SystemStatus,
+  TrainingStatus,
+  StorageStats,
+  TrainingResponse,
+  HealthCheck,
+  StudentsResponse,
+  StudentResponse,
+  AttendanceResponse,
+  CaptureFacesResponse,
+  DeleteFacesResponse,
+  StudentStatsResponse,
+  AttendanceStatsResponse,
+  AttendanceRangeResponse,
+  ModelStatusResponse,
+  SystemStatusResponse,
+  TrainingStatusResponse,
+  ValidateTrainingResponse,
+  StorageResponse,
+  LogsResponse,
+  CleanupResponse
+} from '@/types';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 
@@ -7,13 +35,13 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000,
+  timeout: 30000,
 });
 
 // Request interceptor for logging
 api.interceptors.request.use(
   (config) => {
-    console.log(`🔄 API Call: ${config.method?.toUpperCase()} ${config.url}`);
+    console.log(`🚀 ${config.method?.toUpperCase()} ${config.url}`);
     return config;
   },
   (error) => {
@@ -24,48 +52,61 @@ api.interceptors.request.use(
 // Response interceptor for error handling
 api.interceptors.response.use(
   (response) => {
-    console.log(`✅ API Success: ${response.status} ${response.config.url}`);
     return response;
   },
   (error) => {
-    console.error(`❌ API Error: ${error.message}`, error.response?.data);
+    console.error('API Error:', error.response?.data || error.message);
     return Promise.reject(error);
   }
 );
 
 // Students API
 export const studentsApi = {
-  getAll: async () => {
-    const response = await api.get('/students');
+  // Get all students
+  getAll: async (includeStats?: boolean): Promise<StudentsResponse> => {
+    const params = includeStats ? { include_stats: 'true' } : {};
+    const response = await api.get('/students', { params });
     return response.data;
   },
-  
-  getById: async (studentId: string) => {
+
+  // Get student by ID
+  getById: async (studentId: string): Promise<StudentResponse> => {
     const response = await api.get(`/students/${studentId}`);
     return response.data;
   },
-  
-  create: async (studentData: any) => {
+
+  // Register new student
+  create: async (studentData: StudentFormData): Promise<StudentResponse> => {
     const response = await api.post('/students', studentData);
     return response.data;
   },
-  
-  update: async (studentId: string, updates: any) => {
-    const response = await api.put(`/students/${studentId}`, updates);
+
+  // Update student
+  update: async (studentId: string, updateData: Partial<StudentFormData & { is_active: boolean }>): Promise<StudentResponse> => {
+    const response = await api.put(`/students/${studentId}`, updateData);
     return response.data;
   },
-  
-  delete: async (studentId: string) => {
+
+  // Delete student (deactivate)
+  delete: async (studentId: string): Promise<StudentResponse> => {
     const response = await api.delete(`/students/${studentId}`);
     return response.data;
   },
-  
-  captureFaces: async (studentId: string, imageData: string) => {
+
+  // Capture face images for student
+  captureFaces: async (studentId: string, imageData: string): Promise<CaptureFacesResponse> => {
     const response = await api.post(`/students/${studentId}/capture`, { image: imageData });
     return response.data;
   },
-  
-  getStats: async () => {
+
+  // Delete all face images for student
+  deleteFaces: async (studentId: string): Promise<DeleteFacesResponse> => {
+    const response = await api.delete(`/students/${studentId}/faces`);
+    return response.data;
+  },
+
+  // Get student statistics
+  getStats: async (): Promise<StudentStatsResponse> => {
     const response = await api.get('/students/stats');
     return response.data;
   },
@@ -73,51 +114,58 @@ export const studentsApi = {
 
 // Attendance API
 export const attendanceApi = {
-  recognizeFaces: async (imageData: string) => {
+  // Recognize faces in image
+  recognizeFaces: async (imageData: string): Promise<RecognitionResponse> => {
     const response = await api.post('/attendance/recognize', { image: imageData });
     return response.data;
   },
-  
-  markAttendance: async (recognizedFaces: any[]) => {
+
+  // Mark attendance for recognized students
+  markAttendance: async (recognizedFaces: any[]): Promise<MarkAttendanceResponse> => {
     const response = await api.post('/attendance/mark', { recognized_faces: recognizedFaces });
     return response.data;
   },
-  
-  markManual: async (studentId: string, status: string = 'present', notes?: string) => {
-    const response = await api.post('/attendance/manual', { 
-      student_id: studentId, 
-      status, 
-      notes 
-    });
+
+  // Manually mark attendance
+  markManual: async (studentId: string, status: string = 'present', notes?: string): Promise<{ success: boolean; message: string }> => {
+    const response = await api.post('/attendance/manual', { student_id: studentId, status, notes });
     return response.data;
   },
-  
-  getRecords: async (date?: string) => {
+
+  // Get attendance records
+  getRecords: async (date?: string): Promise<AttendanceResponse> => {
     const params = date ? { date } : {};
     const response = await api.get('/attendance', { params });
     return response.data;
   },
-  
-  getStats: async (date?: string) => {
+
+  // Get attendance statistics
+  getStats: async (date?: string): Promise<AttendanceStatsResponse> => {
     const params = date ? { date } : {};
     const response = await api.get('/attendance/stats', { params });
     return response.data;
   },
-  
-  getRange: async (startDate: string, endDate: string) => {
+
+  // Get attendance records for date range
+  getRange: async (startDate: string, endDate: string): Promise<AttendanceRangeResponse> => {
     const response = await api.get('/attendance/range', { 
       params: { start_date: startDate, end_date: endDate } 
     });
     return response.data;
   },
-  
-  export: async (date?: string) => {
+
+  // Export attendance to CSV
+  export: async (date?: string): Promise<Blob> => {
     const params = date ? { date } : {};
-    const response = await api.get('/attendance/export', { params });
+    const response = await api.get('/attendance/export', { 
+      params,
+      responseType: 'blob'
+    });
     return response.data;
   },
-  
-  getModelStatus: async () => {
+
+  // Check if face recognition model is ready
+  getModelStatus: async (): Promise<ModelStatusResponse> => {
     const response = await api.get('/attendance/model/status');
     return response.data;
   },
@@ -125,44 +173,82 @@ export const attendanceApi = {
 
 // System API
 export const systemApi = {
-  health: async () => {
+  // Health check
+  getHealth: async (): Promise<HealthCheck> => {
     const response = await api.get('/system/health');
     return response.data;
   },
-  
-  status: async () => {
+
+  // Complete system status
+  getStatus: async (): Promise<SystemStatusResponse> => {
     const response = await api.get('/system/status');
     return response.data;
   },
-  
-  train: async () => {
+
+  // Train face recognition model
+  trainModel: async (): Promise<TrainingResponse> => {
     const response = await api.post('/system/train');
     return response.data;
   },
-  
-  trainingStatus: async () => {
+
+  // Get training status
+  getTrainingStatus: async (): Promise<TrainingStatusResponse> => {
     const response = await api.get('/system/training/status');
     return response.data;
   },
-  
-  validateTraining: async () => {
+
+  // Validate training data readiness
+  validateTraining: async (): Promise<ValidateTrainingResponse> => {
     const response = await api.get('/system/training/validate');
     return response.data;
   },
-  
-  storage: async () => {
+
+  // Get storage information
+  getStorage: async (): Promise<StorageResponse> => {
     const response = await api.get('/system/storage');
     return response.data;
   },
-  
-  logs: async (limit: number = 100) => {
+
+  // Get system logs
+  getLogs: async (limit: number = 100): Promise<LogsResponse> => {
     const response = await api.get('/system/logs', { params: { limit } });
     return response.data;
   },
-  
-  cleanup: async () => {
+
+  // Clean up temporary files
+  cleanup: async (): Promise<CleanupResponse> => {
     const response = await api.post('/system/cleanup');
     return response.data;
+  },
+};
+
+// Utility functions
+export const apiUtils = {
+  // Convert file to base64
+  fileToBase64: (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  },
+
+  // Validate image size (5MB limit)
+  validateImageSize: (base64String: string): boolean => {
+    // Remove data URL prefix if present
+    const base64 = base64String.includes(',') ? base64String.split(',')[1] : base64String;
+    
+    // Calculate approximate size (base64 is about 4/3 of original size)
+    const imageSize = (base64.length * 3) / 4;
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    
+    return imageSize <= maxSize;
+  },
+
+  // Format date for API (YYYY-MM-DD)
+  formatDate: (date: Date): string => {
+    return date.toISOString().split('T')[0];
   },
 };
 
