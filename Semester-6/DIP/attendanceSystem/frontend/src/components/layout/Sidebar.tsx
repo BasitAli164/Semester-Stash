@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter, usePathname } from 'next/navigation';
 import { useAppStore } from '@/store/store';
 
 const navigation = [
@@ -11,7 +12,26 @@ const navigation = [
 ];
 
 export function Sidebar() {
-  const { activeTab, setActiveTab } = useAppStore();
+  const router = useRouter();
+  const pathname = usePathname();
+  const { setActiveTab } = useAppStore();
+
+  // Determine active tab based on current pathname
+  const getActiveTab = () => {
+    if (pathname === '/') return 'dashboard';
+    if (pathname.startsWith('/attendance')) return 'attendance';
+    if (pathname.startsWith('/students')) return 'students';
+    if (pathname.startsWith('/records')) return 'records';
+    if (pathname.startsWith('/system')) return 'system';
+    return 'dashboard';
+  };
+
+  const activeTab = getActiveTab();
+
+  const handleNavigation = (href: string, tab: string) => {
+    setActiveTab(tab as any);
+    router.push(href);
+  };
 
   return (
     <div className="hidden md:flex md:w-64 md:flex-col">
@@ -29,7 +49,7 @@ export function Sidebar() {
             {navigation.map((item) => (
               <button
                 key={item.name}
-                onClick={() => setActiveTab(item.tab as any)}
+                onClick={() => handleNavigation(item.href, item.tab)}
                 className={`group flex items-center px-3 py-2 text-sm font-medium rounded-lg w-full text-left transition-colors ${
                   activeTab === item.tab
                     ? 'bg-blue-50 text-blue-700 border border-blue-200'
@@ -41,6 +61,16 @@ export function Sidebar() {
               </button>
             ))}
           </nav>
+        </div>
+        
+        {/* Sidebar Footer */}
+        <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
+          <div className="flex items-center w-full">
+            <div className="ml-3">
+              <p className="text-sm font-medium text-gray-700">Smart Attendance</p>
+              <p className="text-xs text-gray-500">v1.0.0</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
