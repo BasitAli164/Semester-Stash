@@ -42,87 +42,124 @@ export function StudentRegistrationForm({ onClose }: StudentRegistrationFormProp
   })
 
   // Handle file selection for photo capture
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files
-    if (!files || files.length === 0) return
+ // Handle file selection for photo capture - UPDATED VERSION
+const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const files = event.target.files
+  if (!files || files.length === 0) return
 
-    const file = files[0]
-    
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file')
-      return
-    }
+  const file = files[0]
+  
+  // Validate file type
+  if (!file.type.startsWith('image/')) {
+    toast.error('Please select an image file (JPEG, PNG, etc.)')
+    return
+  }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size should be less than 5MB')
-      return
-    }
+  // Validate file size (max 5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    toast.error('Image size should be less than 5MB')
+    return
+  }
 
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const imageData = e.target?.result as string
+  const reader = new FileReader()
+  
+  reader.onload = (e) => {
+    if (e.target?.result) {
+      const imageData = e.target.result as string
       setCapturedImages(prev => [...prev, imageData])
-      toast.success(`Image ${capturedImages.length + 1} captured successfully`)
+      toast.success(`Image ${capturedImages.length + 1} uploaded successfully`)
       
       // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
       }
     }
-    reader.readAsDataURL(file)
   }
-
-  // Capture photo using camera
-  const capturePhoto = async () => {
-    try {
-      // Check if browser supports camera
-      if (!navigator.mediaDevices?.getUserMedia) {
-        toast.error('Camera not supported in this browser')
-        return
-      }
-
-      // Access camera
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { width: 1280, height: 720 } 
-      })
-      
-      // Create video element temporarily for capture
-      const video = document.createElement('video')
-      video.srcObject = stream
-      video.play()
-      
-      // Wait for video to be ready
-      await new Promise(resolve => {
-        video.onloadedmetadata = () => {
-          resolve(null)
-        }
-      })
-
-      // Create canvas for capture
-      const canvas = document.createElement('canvas')
-      canvas.width = video.videoWidth
-      canvas.height = video.videoHeight
-      const context = canvas.getContext('2d')
-      
-      if (context) {
-        // Draw video frame to canvas
-        context.drawImage(video, 0, 0, canvas.width, canvas.height)
-        const imageData = canvas.toDataURL('image/jpeg', 0.9)
-        
-        setCapturedImages(prev => [...prev, imageData])
-        toast.success(`Image ${capturedImages.length + 1} captured successfully`)
-      }
-
-      // Stop all video tracks
-      stream.getTracks().forEach(track => track.stop())
-      
-    } catch (error) {
-      console.error('Camera error:', error)
-      toast.error('Unable to access camera. Please check permissions.')
+  
+  reader.onerror = () => {
+    toast.error('Failed to read image file. Please try another image.')
+    // Reset file input on error too
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
     }
   }
+  
+  reader.onabort = () => {
+    toast.error('Image reading was cancelled')
+  }
+  
+  reader.readAsDataURL(file)
+}
+
+  // Capture photo using camera
+// Capture photo using camera - UPDATED VERSION
+const capturePhoto = async () => {
+  try {
+    // Check if browser supports camera
+    if (!navigator.mediaDevices?.getUserMedia) {
+      toast.error('Camera not supported in this browser')
+      return
+    }
+
+    toast('Starting camera...')
+
+    // Access camera with proper error handling
+    const stream = await navigator.mediaDevices.getUserMedia({ 
+      video: { 
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        facingMode: 'user'
+      } 
+    })
+    
+    // Create a temporary video element for preview
+    const video = document.createElement('video')
+    video.srcObject = stream
+    video.playsInline = true
+    video.muted = true
+    
+    // Wait for video to be ready with better handling
+    await new Promise((resolve, reject) => {
+      video.onloadedmetadata = () => {
+        video.play()
+          .then(resolve)
+          .catch(reject)
+      }
+      video.onerror = reject
+      
+      // Timeout for safety
+      setTimeout(() => reject(new Error('Camera timeout')), 5000)
+    })
+
+    // Create canvas for capture
+    const canvas = document.createElement('canvas')
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    const context = canvas.getContext('2d')
+    
+    if (context) {
+      // Draw video frame to canvas (mirror for front camera)
+      context.translate(canvas.width, 0)
+      context.scale(-1, 1)
+      context.drawImage(video, 0, 0, canvas.width, canvas.height)
+      
+      // Convert to base64 image
+      const imageData = canvas.toDataURL('image/jpeg', 0.9)
+      
+      setCapturedImages(prev => [...prev, imageData])
+      toast.success(`Image ${capturedImages.length + 1} captured successfully`)
+    }
+
+    // Stop all video tracks properly
+    stream.getTracks().forEach(track => {
+      track.stop()
+    })
+    
+  } catch (error) {
+    console.error('Camera error:', error)
+    toast.error('Unable to access camera. Please check permissions and try again.')
+  }
+}
 
   // Remove captured image
   const removeImage = (index: number) => {

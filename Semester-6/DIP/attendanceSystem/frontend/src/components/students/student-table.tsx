@@ -14,6 +14,10 @@ interface StudentTableProps {
 export function StudentTable({ students }: StudentTableProps) {
   const { deleteStudent } = useAppStore()
 
+  // ✅ ADD DEBUG LOG
+  console.log('🎯 StudentTable received students:', students.length)
+  console.log('📊 StudentTable data:', students)
+
   if (students.length === 0) {
     return (
       <div className="text-center py-12">

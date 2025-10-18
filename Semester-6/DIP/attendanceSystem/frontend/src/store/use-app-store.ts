@@ -4,6 +4,7 @@ import { AttendanceRecord, AttendanceStats, FaceRecognitionResult } from '@/type
 import { studentService } from '@/lib/api/student-service'
 import { attendanceService } from '@/lib/api/attendance-service'
 import { systemService, SystemStatus } from '@/lib/api/system-service'
+import { toast } from 'sonner'
 
 interface AppState {
   // Students state
@@ -113,40 +114,87 @@ export const useAppStore = create<AppState>((set, get) => ({
   setStudentsError: (studentsError) => set({ studentsError }),
   setAttendanceError: (attendanceError) => set({ attendanceError }),
 
-  // Async actions
-  fetchStudents: async () => {
-    set({ isStudentsLoading: true, studentsError: null })
-    try {
-      const response = await studentService.getAllStudents()
-      if (response.success) {
-        set({ students: response.data || [] })
-      } else {
-        set({ studentsError: response.message || 'Failed to fetch students' })
-      }
-    } catch (error: any) {
-      set({ studentsError: error.message || 'Failed to fetch students' })
-    } finally {
-      set({ isStudentsLoading: false })
+fetchStudents: async () => {
+  set({ isStudentsLoading: true, studentsError: null })
+  try {
+    console.log('🔄 Fetching students from API...')
+    const response = await studentService.getAllStudents()
+    console.log('📡 API Response:', response)
+    
+    if (response.success) {
+      // ✅ NOW response.data is guaranteed to be Student[]
+      const studentsData = response.data || []
+      console.log('✅ Students fetched:', studentsData.length)
+      console.log('📊 Students data:', studentsData)
+      set({ students: studentsData })
+    } else {
+      console.error('❌ API Error:', response.message)
+      set({ studentsError: response.message || 'Failed to fetch students' })
     }
-  },
+  } catch (error: any) {
+    console.error('💥 Fetch Students Error:', error)
+    set({ studentsError: error.message || 'Failed to fetch students' })
+  } finally {
+    set({ isStudentsLoading: false })
+  }
+},
 
-  registerStudent: async (data) => {
-    set({ studentsError: null })
-    try {
-      const response = await studentService.registerStudent(data)
-      if (response.success) {
-        // Refresh students list
-        await get().fetchStudents()
-        return true
-      } else {
-        set({ studentsError: response.message || 'Failed to register student' })
-        return false
+registerStudent: async (data) => {
+  set({ studentsError: null })
+  try {
+    console.log('🔄 Registering student:', data)
+    
+    // ✅ Fixed: Add required fields
+    const studentData = {
+      student_id: data.student_id,
+      name: data.name,
+      email: data.email,
+      department: data.department,
+      is_active: true
+    }
+
+    const response = await studentService.registerStudent(studentData)
+    console.log('📡 Register API Response:', response)
+    
+    if (response.success) {
+      // ✅ FIX: Use the student data from response if available
+      const newStudent: Student = response.data?.student || {
+        id: Date.now().toString(),
+        student_id: data.student_id,
+        name: data.name,
+        email: data.email,
+        department: data.department,
+        registration_date: new Date().toISOString(),
+        is_active: true,
+        created_at: new Date().toISOString(),
+        face_images_captured: 0
       }
-    } catch (error: any) {
-      set({ studentsError: error.message || 'Failed to register student' })
+      
+      console.log('✅ Adding student to local state:', newStudent)
+      set(state => ({ 
+        students: [...state.students, newStudent] 
+      }))
+      
+      toast.success("Student registered successfully!")
+      
+      // Then refresh from server
+      console.log('🔄 Refreshing students list...')
+      await get().fetchStudents()
+      return true
+    } else {
+      console.error('❌ Registration failed:', response.message)
+      set({ studentsError: response.message || 'Failed to register student' })
+      toast.error(response.message || 'Failed to register student')
       return false
     }
-  },
+  } catch (error: any) {
+    console.error('💥 Registration Error:', error)
+    const errorMsg = error.message || 'Failed to register student'
+    set({ studentsError: errorMsg })
+    toast.error(errorMsg)
+    return false
+  }
+},
 
   deleteStudent: async (id) => {
     set({ studentsError: null })

@@ -3,9 +3,39 @@ import { ApiResponse, PaginatedResponse } from '@/types/api'
 import { Student } from '@/types/student'
 
 export const studentService = {
-  // Get all students
+  // Get all students - FIXED VERSION
   getAllStudents: (): Promise<ApiResponse<Student[]>> =>
-    api.get('/students').then(res => res.data),
+    api.get('/students').then(res => {
+      const response = res.data
+      console.log('🔧 StudentService - Raw API response:', response)
+      
+      // ✅ Extract students array from different possible response formats
+      let studentsData: Student[] = []
+      
+      if (Array.isArray(response)) {
+        // Format 1: Response is directly the array
+        studentsData = response
+      } else if (response && Array.isArray(response.data)) {
+        // Format 2: Response has data property with array
+        studentsData = response.data
+      } else if (response && Array.isArray(response.students)) {
+        // Format 3: Response has students property with array  
+        studentsData = response.students
+      } else if (response && response.success && Array.isArray(response.data?.students)) {
+        // Format 4: Nested structure { data: { students: [] }, success: true }
+        studentsData = response.data.students
+      } else if (response && response.success && Array.isArray(response.students)) {
+        // Format 5: { students: [], success: true }
+        studentsData = response.students
+      }
+      
+      console.log('🔧 StudentService - Extracted students:', studentsData.length)
+      
+      return {
+        success: true,
+        data: studentsData
+      }
+    }),
 
   // Get student by ID
   getStudentById: (id: string): Promise<ApiResponse<Student>> =>

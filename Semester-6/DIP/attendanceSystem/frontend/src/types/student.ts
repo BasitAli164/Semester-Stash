@@ -15,4 +15,5 @@ export interface StudentFormData {
   name: string
   email?: string
   department?: string
+  
 }
