@@ -331,21 +331,23 @@ export const useAppStore = create<AppStore>()(
         }
       },
       
-      exportAttendance: async (date) => {
-        try {
-          const blob = await attendanceApi.export(date);
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `attendance_${date || new Date().toISOString().split('T')[0]}.csv`;
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(url);
-          document.body.removeChild(a);
-        } catch (error: any) {
-          console.error('Export attendance failed:', error);
-        }
-      },
+    // Add to your existing store actions
+exportAttendance: async (date?: string) => {
+  try {
+    const blob = await attendanceApi.export(date);
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `attendance_${date || new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  } catch (error: any) {
+    console.error('Export attendance failed:', error);
+    alert('Failed to export attendance data. Please try again.');
+  }
+},
       
       // Async Actions - System
       fetchSystemStatus: async () => {
