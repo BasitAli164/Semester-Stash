@@ -1,29 +1,46 @@
 # backend/utils/image_processor.py
-import numpy as np
-from PIL import Image, ImageOps
-import io
 import base64
-from typing import List, Tuple, Optional
+import io
+import cv2
+import numpy as np
+from PIL import Image, ImageDraw, ImageFont
+from typing import List, Dict, Tuple, Optional, Any  # Add missing imports
 
 class ImageProcessor:
-    """Handles all image processing operations for the attendance system"""
+    """Handles image processing operations for face recognition"""
     
     def __init__(self):
         from config import config
         self.config = config
     
-    def base64_to_image(self, base64_string: str) -> Image.Image:
-        """Convert base64 string to PIL Image"""
+    def validate_image_size(self, image_data: str, max_size: int = None) -> bool:
+        """Validate image size"""
         try:
-            # Remove data URL prefix if present
-            if ',' in base64_string:
-                base64_string = base64_string.split(',')[1]
+            if max_size is None:
+                max_size = self.config.MAX_IMAGE_SIZE
+            
+            # Calculate approximate size (base64 is about 33% larger than binary)
+            if image_data.startswith('data:image'):
+                # Remove data URL prefix
+                image_data = image_data.split(',')[1]
+            
+            approximate_size = len(image_data) * 0.75
+            return approximate_size <= max_size
+            
+        except Exception as e:
+            print(f"Error validating image size: {e}")
+            return False
+    
+    def base64_to_image(self, image_data: str) -> Image.Image:
+        """Convert base64 image data to PIL Image"""
+        try:
+            # Handle data URL format
+            if image_data.startswith('data:image'):
+                image_data = image_data.split(',')[1]
             
             # Decode base64
-            image_data = base64.b64decode(base64_string)
-            
-            # Open image with PIL
-            image = Image.open(io.BytesIO(image_data))
+            image_bytes = base64.b64decode(image_data)
+            image = Image.open(io.BytesIO(image_bytes))
             
             # Convert to RGB if necessary
             if image.mode != 'RGB':
@@ -32,208 +49,210 @@ class ImageProcessor:
             return image
             
         except Exception as e:
-            raise ValueError(f"Error decoding base64 image: {str(e)}")
+            raise ValueError(f"Failed to decode image: {str(e)}")
     
-    def image_to_base64(self, image: Image.Image, format: str = 'JPEG', quality: int = 85) -> str:
+    def image_to_base64(self, image: Image.Image, format: str = 'JPEG') -> str:
         """Convert PIL Image to base64 string"""
         try:
-            buffer = io.BytesIO()
-            image.save(buffer, format=format, quality=quality, optimize=True)
-            image_data = buffer.getvalue()
-            base64_encoded = base64.b64encode(image_data).decode('utf-8')
-            return f"data:image/{format.lower()};base64,{base64_encoded}"
+            buffered = io.BytesIO()
+            image.save(buffered, format=format)
+            img_str = base64.b64encode(buffered.getvalue()).decode()
+            return f"data:image/{format.lower()};base64,{img_str}"
+            
         except Exception as e:
-            raise ValueError(f"Error encoding image to base64: {str(e)}")
+            raise ValueError(f"Failed to encode image: {str(e)}")
     
-    def detect_faces(self, image: Image.Image) -> Tuple[List[np.ndarray], List[Tuple[int, int, int, int]]]:
-        """Detect faces in image and return face images and coordinates"""
+    def enhance_image_quality(self, image: Image.Image) -> Image.Image:
+        """Enhance image quality for better face recognition"""
         try:
-            import cv2
+            # Convert PIL Image to OpenCV format
+            cv_image = np.array(image)
             
-            # Convert PIL Image to numpy array
-            image_array = np.array(image)
-            
-            # Convert to grayscale for face detection
-            if len(image_array.shape) == 3:
-                gray_array = cv2.cvtColor(image_array, cv2.COLOR_RGB2GRAY)
+            # Convert to grayscale for processing
+            if len(cv_image.shape) == 3:
+                gray = cv2.cvtColor(cv_image, cv2.COLOR_RGB2GRAY)
             else:
-                gray_array = image_array
-            
-            # Load face cascade classifier
-            face_cascade = cv2.CascadeClassifier(
-                cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
-            )
-            
-            if face_cascade.empty():
-                raise ValueError("Failed to load face detection classifier")
-            
-            # Detect faces
-            faces = face_cascade.detectMultiScale(
-                gray_array,
-                scaleFactor=self.config.FACE_DETECTION_SCALE_FACTOR,
-                minNeighbors=self.config.FACE_DETECTION_MIN_NEIGHBORS,
-                minSize=self.config.FACE_DETECTION_MIN_SIZE
-            )
-            
-            face_images = []
-            face_coordinates = []
-            
-            for (x, y, w, h) in faces:
-                # Extract face region
-                face_img = gray_array[y:y+h, x:x+w]
-                
-                # Resize to standard size for better recognition
-                face_img = cv2.resize(face_img, (200, 200))
-                
-                # Apply histogram equalization for better contrast
-                face_img = cv2.equalizeHist(face_img)
-                
-                face_images.append(face_img)
-                face_coordinates.append((int(x), int(y), int(w), int(h)))
-            
-            return face_images, face_coordinates
-            
-        except Exception as e:
-            raise ValueError(f"Face detection failed: {str(e)}")
-    
-    def preprocess_face_image(self, face_image: np.ndarray, target_size: Tuple[int, int] = (200, 200)) -> np.ndarray:
-        """Preprocess face image for training or recognition"""
-        try:
-            import cv2
-            
-            # Resize to target size
-            face_image = cv2.resize(face_image, target_size)
+                gray = cv_image
             
             # Apply histogram equalization for better contrast
-            face_image = cv2.equalizeHist(face_image)
+            enhanced = cv2.equalizeHist(gray)
             
-            # Normalize pixel values
-            face_image = face_image.astype(np.float32) / 255.0
+            # Apply Gaussian blur to reduce noise
+            enhanced = cv2.GaussianBlur(enhanced, (3, 3), 0)
             
-            return face_image
+            # Convert back to PIL Image
+            if len(cv_image.shape) == 3:
+                # Convert back to color
+                enhanced_color = cv2.cvtColor(enhanced, cv2.COLOR_GRAY2RGB)
+                return Image.fromarray(enhanced_color)
+            else:
+                return Image.fromarray(enhanced)
+                
+        except Exception as e:
+            print(f"Image enhancement failed, using original: {e}")
+            return image
+    
+    def resize_image(self, image: Image.Image, max_width: int = 800, max_height: int = 600) -> Image.Image:
+        """Resize image while maintaining aspect ratio"""
+        try:
+            width, height = image.size
+            
+            if width <= max_width and height <= max_height:
+                return image
+            
+            # Calculate new dimensions
+            ratio = min(max_width / width, max_height / height)
+            new_width = int(width * ratio)
+            new_height = int(height * ratio)
+            
+            return image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            
+        except Exception as e:
+            print(f"Image resize failed: {e}")
+            return image
+    
+    def crop_face_region(self, image: Image.Image, face_coordinates: Tuple[int, int, int, int]) -> Image.Image:
+        """Crop face region from image"""
+        try:
+            x, y, w, h = face_coordinates
+            
+            # Add some padding around the face
+            padding = int(min(w, h) * 0.2)
+            x1 = max(0, x - padding)
+            y1 = max(0, y - padding)
+            x2 = min(image.width, x + w + padding)
+            y2 = min(image.height, y + h + padding)
+            
+            return image.crop((x1, y1, x2, y2))
+            
+        except Exception as e:
+            print(f"Face cropping failed: {e}")
+            return image
+    
+    def preprocess_face_image(self, face_image: Image.Image, target_size: Tuple[int, int] = (200, 200)) -> np.ndarray:
+        """Preprocess face image for recognition"""
+        try:
+            # Convert to grayscale
+            if face_image.mode != 'L':
+                face_image = face_image.convert('L')
+            
+            # Resize to target size
+            face_image = face_image.resize(target_size, Image.Resampling.LANCZOS)
+            
+            # Convert to numpy array
+            face_array = np.array(face_image, dtype=np.uint8)
+            
+            # Apply histogram equalization
+            face_array = cv2.equalizeHist(face_array)
+            
+            return face_array
             
         except Exception as e:
             raise ValueError(f"Face preprocessing failed: {str(e)}")
     
     def draw_face_boxes(self, image: Image.Image, faces_data: List[Dict]) -> Image.Image:
-        """Draw bounding boxes and labels on image for visualization"""
+        """Draw bounding boxes and labels on detected faces"""
         try:
-            import cv2
+            # Create a copy of the image to draw on
+            draw_image = image.copy()
+            draw = ImageDraw.Draw(draw_image)
             
-            # Convert PIL Image to OpenCV format (BGR)
-            image_cv = np.array(image)
-            if image_cv.shape[2] == 3:  # RGB
-                image_cv = cv2.cvtColor(image_cv, cv2.COLOR_RGB2BGR)
-            elif image_cv.shape[2] == 4:  # RGBA
-                image_cv = cv2.cvtColor(image_cv, cv2.COLOR_RGBA2BGR)
+            # Try to load a font, fallback to default if not available
+            try:
+                font = ImageFont.truetype("arial.ttf", 20)
+            except:
+                font = ImageFont.load_default()
             
             for face in faces_data:
+                if 'bounding_box' not in face:
+                    continue
+                
                 x, y, w, h = face['bounding_box']
                 
+                # Determine box color based on recognition status
                 if face.get('status') == 'recognized':
-                    # Known face - green box
-                    color = (0, 255, 0)
-                    label = f"{face['name']} ({face['confidence']}%)"
+                    box_color = (0, 255, 0)  # Green for recognized
+                    label = f"{face.get('name', 'Unknown')} ({face.get('confidence', 0)}%)"
                 else:
-                    # Unknown face - red box
-                    color = (0, 0, 255)
+                    box_color = (255, 0, 0)  # Red for unknown
                     label = "Unknown"
                 
                 # Draw bounding box
-                cv2.rectangle(image_cv, (x, y), (x+w, y+h), color, 2)
+                draw.rectangle([x, y, x + w, y + h], outline=box_color, width=3)
                 
                 # Draw label background
-                font = cv2.FONT_HERSHEY_SIMPLEX
-                font_scale = 0.6
-                thickness = 2
-                
-                label_size = cv2.getTextSize(label, font, font_scale, thickness)[0]
-                label_bg_top = max(y - label_size[1] - 10, 0)
-                label_bg_bottom = y
-                label_bg_right = x + label_size[0]
-                
-                cv2.rectangle(image_cv, 
-                            (x, label_bg_top), 
-                            (label_bg_right, label_bg_bottom), 
-                            color, -1)
+                text_bbox = draw.textbbox((x, y - 25), label, font=font)
+                draw.rectangle(text_bbox, fill=box_color)
                 
                 # Draw label text
-                cv2.putText(image_cv, label, (x, y-5), 
-                          font, font_scale, (255, 255, 255), thickness)
+                draw.text((x, y - 25), label, fill=(255, 255, 255), font=font)
             
-            # Convert back to PIL Image (RGB)
-            image_rgb = cv2.cvtColor(image_cv, cv2.COLOR_BGR2RGB)
-            return Image.fromarray(image_rgb)
+            return draw_image
             
         except Exception as e:
-            raise ValueError(f"Error drawing face boxes: {str(e)}")
-    
-    def validate_image_size(self, base64_string: str, max_size: int = None) -> bool:
-        """Validate image size against maximum allowed size"""
-        if max_size is None:
-            max_size = self.config.MAX_IMAGE_SIZE
-        
-        try:
-            if ',' in base64_string:
-                base64_string = base64_string.split(',')[1]
-            
-            # Calculate approximate size (base64 is about 4/3 of original size)
-            image_size = (len(base64_string) * 3) // 4
-            
-            return image_size <= max_size
-            
-        except Exception:
-            return False
-    
-    def compress_image(self, image: Image.Image, max_size: Tuple[int, int] = (800, 600), 
-                      quality: int = 85) -> Image.Image:
-        """Compress image to reduce size while maintaining quality"""
-        try:
-            # Calculate scaling factor to fit within max_size while maintaining aspect ratio
-            width, height = image.size
-            max_width, max_height = max_size
-            
-            if width > max_width or height > max_height:
-                # Calculate scaling factor
-                scale = min(max_width/width, max_height/height)
-                new_width = int(width * scale)
-                new_height = int(height * scale)
-                
-                # Resize image
-                image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
-            
+            print(f"Error drawing face boxes: {e}")
             return image
+    
+    def compress_image(self, image: Image.Image, quality: int = 85) -> Image.Image:
+        """Compress image while maintaining reasonable quality"""
+        try:
+            # Convert to RGB if necessary
+            if image.mode != 'RGB':
+                image = image.convert('RGB')
+            
+            # Compress by reducing quality
+            buffered = io.BytesIO()
+            image.save(buffered, format='JPEG', quality=quality, optimize=True)
+            buffered.seek(0)
+            
+            return Image.open(buffered)
             
         except Exception as e:
-            raise ValueError(f"Image compression failed: {str(e)}")
+            print(f"Image compression failed: {e}")
+            return image
     
-    def enhance_image_quality(self, image: Image.Image) -> Image.Image:
-        """Enhance image quality for better face detection"""
+    def extract_faces(self, image: Image.Image) -> List[Image.Image]:
+        """Extract all faces from image using OpenCV"""
         try:
             import cv2
             
-            # Convert to numpy array for OpenCV processing
-            image_array = np.array(image)
+            # Convert PIL Image to OpenCV format
+            cv_image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
             
-            # Convert to different color spaces for enhancement
-            if len(image_array.shape) == 3:
-                # Convert to LAB color space
-                lab = cv2.cvtColor(image_array, cv2.COLOR_RGB2LAB)
-                
-                # Apply CLAHE to L channel for contrast enhancement
-                clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-                lab[:,:,0] = clahe.apply(lab[:,:,0])
-                
-                # Convert back to RGB
-                enhanced = cv2.cvtColor(lab, cv2.COLOR_LAB2RGB)
-                
-                return Image.fromarray(enhanced)
-            else:
-                # For grayscale images, just apply CLAHE
-                clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-                enhanced = clahe.apply(image_array)
-                return Image.fromarray(enhanced)
-                
+            # Convert to grayscale for face detection
+            gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
+            
+            # Load face detector
+            face_cascade = cv2.CascadeClassifier(
+                cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
+            )
+            
+            # Detect faces
+            faces = face_cascade.detectMultiScale(
+                gray,
+                scaleFactor=1.1,
+                minNeighbors=5,
+                minSize=(30, 30)
+            )
+            
+            face_images = []
+            for (x, y, w, h) in faces:
+                # Extract face region
+                face_region = image.crop((x, y, x + w, y + h))
+                face_images.append(face_region)
+            
+            return face_images
+            
         except Exception as e:
-            print(f"Image enhancement failed, using original: {e}")
-            return image  # Return original if enhancement fails
+            print(f"Face extraction failed: {e}")
+            return []
+    
+    def get_image_info(self, image: Image.Image) -> Dict[str, Any]:
+        """Get basic information about the image"""
+        return {
+            'size': image.size,
+            'mode': image.mode,
+            'format': getattr(image, 'format', 'Unknown'),
+            'width': image.width,
+            'height': image.height
+        }

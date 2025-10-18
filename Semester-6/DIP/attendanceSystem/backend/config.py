@@ -1,3 +1,4 @@
+# backend/config/__init__.py (create this file if it doesn't exist)
 import os
 from pathlib import Path
 
@@ -5,7 +6,7 @@ class Config:
     """Application configuration"""
     
     # Base paths
-    BASE_DIR = Path(__file__).parent
+    BASE_DIR = Path(__file__).parent.parent
     DATA_DIR = BASE_DIR / "data"
     
     # Database
@@ -40,15 +41,4 @@ class Config:
     PORT = int(os.getenv('PORT', 5000))
     DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 
-class DevelopmentConfig(Config):
-    """Development configuration"""
-    DEBUG = True
-    TESTING = False
-
-class ProductionConfig(Config):
-    """Production configuration"""
-    DEBUG = False
-    TESTING = False
-
-# Current configuration
-config = DevelopmentConfig()
+config = Config()

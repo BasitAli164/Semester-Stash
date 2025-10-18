@@ -4,6 +4,7 @@ import os
 from typing import Dict, List, Tuple, Any
 from datetime import datetime, timedelta
 
+
 # Create blueprint
 attendance_bp = Blueprint('attendance', __name__)
 
@@ -119,11 +120,15 @@ def get_attendance():
     """Get attendance records"""
     try:
         date = request.args.get('date', datetime.now().strftime('%Y-%m-%d'))
+        print(f"📊 Fetching attendance for date: {date}")
         
+        # Import inside function to avoid circular imports
         from services.attendance_service import AttendanceService
-        attendance_service = AttendanceService()
         
+        attendance_service = AttendanceService()
         report = attendance_service.get_attendance_report(date)
+        
+        print(f"✅ Attendance report generated: {len(report.get('attendance', []))} records")
         
         return jsonify({
             'success': True,
@@ -131,9 +136,27 @@ def get_attendance():
         }), 200
         
     except Exception as e:
+        print(f"❌ Error in get_attendance: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
+        # Return a basic response even if there's an error
         return jsonify({
             'success': False,
-            'message': f'Server error: {str(e)}'
+            'message': f'Server error: {str(e)}',
+            'report': {
+                'attendance': [],
+                'absent_students': [],
+                'stats': {
+                    'date': date,
+                    'present_count': 0,
+                    'absent_count': 0,
+                    'total_students': 0,
+                    'attendance_rate': 0
+                },
+                'date': date,
+                'total_records': 0
+            }
         }), 500
 
 @attendance_bp.route('/attendance/stats', methods=['GET'])

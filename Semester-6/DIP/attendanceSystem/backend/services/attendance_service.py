@@ -1,5 +1,4 @@
 # backend/services/attendance_service.py
-from typing import List, Dict, Tuple, Optional
 from datetime import datetime, timedelta
 
 class AttendanceService:
@@ -16,11 +15,11 @@ class AttendanceService:
         self.image_processor = ImageProcessor()
         self.face_recognizer = FaceRecognizer()
     
-    def is_model_ready(self) -> bool:
+    def is_model_ready(self):
         """Check if face recognition model is ready"""
         return self.face_recognizer.is_model_ready()
     
-    def recognize_faces(self, image_data: str) -> Tuple[bool, str, List[Dict]]:
+    def recognize_faces(self, image_data):
         """Recognize faces in image and return results"""
         try:
             import numpy as np
@@ -58,7 +57,7 @@ class AttendanceService:
         except Exception as e:
             return False, f"Face recognition failed: {str(e)}", []
     
-    def mark_attendance_from_recognition(self, recognition_results: List[Dict]) -> Tuple[int, List[Dict]]:
+    def mark_attendance_from_recognition(self, recognition_results):
         """Mark attendance for recognized students"""
         marked_count = 0
         detailed_results = []
@@ -93,7 +92,7 @@ class AttendanceService:
         
         return marked_count, detailed_results
     
-    def mark_manual_attendance(self, student_id: str, status: str = "present", notes: str = None) -> Tuple[bool, str]:
+    def mark_manual_attendance(self, student_id, status="present", notes=None):
         """Manually mark attendance for a student"""
         try:
             student = self.db.get_student(student_id)
@@ -114,7 +113,7 @@ class AttendanceService:
             self.db._log('ERROR', error_msg, 'attendance')
             return False, error_msg
     
-    def get_attendance_report(self, date: str = None) -> Dict:
+    def get_attendance_report(self, date=None):
         """Get comprehensive attendance report for a date"""
         attendance = self.db.get_attendance(date)
         stats = self.db.get_attendance_stats(date)
@@ -141,7 +140,7 @@ class AttendanceService:
             'total_records': len(attendance) + len(absent_students)
         }
     
-    def get_attendance_range_report(self, start_date: str, end_date: str) -> Dict:
+    def get_attendance_range_report(self, start_date, end_date):
         """Get attendance report for a date range"""
         try:
             attendance_data = self.db.get_attendance_range(start_date, end_date)
@@ -196,11 +195,11 @@ class AttendanceService:
             self.db._log('ERROR', f'Range report failed: {str(e)}', 'attendance')
             return {}
     
-    def get_attendance_stats(self, date: str = None) -> Dict:
+    def get_attendance_stats(self, date=None):
         """Get attendance statistics"""
         return self.db.get_attendance_stats(date)
     
-    def export_attendance(self, date: str = None) -> Tuple[bool, str, str]:
+    def export_attendance(self, date=None):
         """Export attendance data to CSV"""
         try:
             report = self.get_attendance_report(date)
@@ -240,10 +239,10 @@ class AttendanceService:
             self.db._log('ERROR', error_msg, 'attendance')
             return False, error_msg, ""
     
-    def _get_current_date(self) -> str:
+    def _get_current_date(self):
         """Get current date in YYYY-MM-DD format"""
         return datetime.now().strftime('%Y-%m-%d')
     
-    def _get_current_time(self) -> str:
+    def _get_current_time(self):
         """Get current time in HH:MM:SS format"""
         return datetime.now().strftime('%H:%M:%S')

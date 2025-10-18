@@ -264,7 +264,8 @@ class DatabaseManager:
                 
                 # Total active students
                 cursor.execute('SELECT COUNT(*) FROM students WHERE is_active = 1')
-                total_students = cursor.fetchone()[0]
+                total_students_result = cursor.fetchone()
+                total_students = total_students_result[0] if total_students_result else 0
                 
                 # Present students today
                 cursor.execute('''
@@ -272,7 +273,8 @@ class DatabaseManager:
                     FROM attendance 
                     WHERE date = ? AND status = 'present'
                 ''', (date,))
-                present_count = cursor.fetchone()[0]
+                present_result = cursor.fetchone()
+                present_count = present_result[0] if present_result else 0
                 
                 # Late students (marked after 9:30 AM)
                 cursor.execute('''
@@ -280,10 +282,11 @@ class DatabaseManager:
                     FROM attendance 
                     WHERE date = ? AND time > '09:30:00' AND status = 'present'
                 ''', (date,))
-                late_count = cursor.fetchone()[0]
+                late_result = cursor.fetchone()
+                late_count = late_result[0] if late_result else 0
                 
                 # Absent students
-                absent_count = total_students - present_count
+                absent_count = max(0, total_students - present_count)
                 
                 # Attendance rate
                 attendance_rate = round((present_count / total_students) * 100, 2) if total_students > 0 else 0
@@ -300,7 +303,16 @@ class DatabaseManager:
                 
         except Exception as e:
             self._log('ERROR', f"Error getting attendance stats: {str(e)}")
-            return {}
+            # Return default stats instead of empty dict
+            return {
+                'date': date or datetime.datetime.now().strftime('%Y-%m-%d'),
+                'total_students': 0,
+                'present': 0,
+                'absent': 0,
+                'late': 0,
+                'attendance_rate': 0,
+                'on_time': 0
+            }
     
     def get_attendance_history(self, student_id: str, days: int = 30) -> List[Dict[str, Any]]:
         """Get attendance history for a student"""
