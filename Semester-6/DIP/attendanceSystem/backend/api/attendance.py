@@ -254,3 +254,51 @@ def get_model_status():
             'success': False,
             'message': f'Server error: {str(e)}'
         }), 500
+@attendance_bp.route('/attendance/debug/recognition', methods=['POST'])
+def debug_recognition():
+    """Debug endpoint for recognition testing"""
+    try:
+        data = request.get_json()
+        
+        if not data or 'image' not in data:
+            return jsonify({
+                'success': False,
+                'message': 'Image data is required'
+            }), 400
+        
+        from services.attendance_service import AttendanceService
+        from utils.image_processor import ImageProcessor
+        import numpy as np
+        import cv2
+        
+        attendance_service = AttendanceService()
+        
+        # Test model loading
+        model_info = attendance_service.face_recognizer.get_model_info()
+        
+        # Test face detection
+        image_processor = ImageProcessor()
+        image = image_processor.base64_to_image(data['image'])
+        image_array = np.array(image)
+        
+        # Test recognition
+        success, message, results = attendance_service.recognize_faces(data['image'])
+        
+        debug_info = {
+            'model_info': model_info,
+            'recognition_success': success,
+            'recognition_message': message,
+            'results_count': len(results),
+            'results': results
+        }
+        
+        return jsonify({
+            'success': True,
+            'debug_info': debug_info
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Debug error: {str(e)}'
+        }), 500

@@ -5,8 +5,8 @@ class Config:
     """Application configuration"""
     
     # Base paths - use absolute paths
-    BASE_DIR = Path(__file__).parent.parent  # Go up to project root
-    DATA_DIR = BASE_DIR / "data"
+    BASE_DIR = Path(__file__).parent.parent  # Points to backend/ (changed from parent.parent.parent)
+    DATA_DIR = BASE_DIR / "data"  # Now this becomes backend/data/
     
     # Database
     DATABASE_PATH = DATA_DIR / "attendance.db"
@@ -48,6 +48,8 @@ class Config:
         self.TEMP_DIR.mkdir(parents=True, exist_ok=True)
         
         print(f"🔧 Configuration loaded:")
+        print(f"   BASE_DIR: {self.BASE_DIR}")
+        print(f"   DATA_DIR: {self.DATA_DIR}")
         print(f"   FACES_DIR: {self.FACES_DIR}")
         print(f"   DATABASE_PATH: {self.DATABASE_PATH}")
 

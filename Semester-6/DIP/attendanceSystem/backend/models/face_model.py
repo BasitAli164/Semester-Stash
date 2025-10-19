@@ -43,11 +43,16 @@ class FaceRecognizer:
         try:
             import cv2
             
+            print(f"🔄 Loading model from: {self.model_path}")
+            print(f"🔄 Loading label map from: {self.label_map_path}")
+            
             if os.path.exists(self.model_path):
                 self.recognizer = cv2.face.LBPHFaceRecognizer_create()
                 self.recognizer.read(str(self.model_path))
+                print("✅ Model loaded successfully")
             else:
                 self.recognizer = None
+                print("❌ Model file not found")
             
             if os.path.exists(self.label_map_path):
                 self.label_map = {}
@@ -58,19 +63,24 @@ class FaceRecognizer:
                         if len(row) >= 3:
                             try:
                                 self.label_map[int(row[0])] = (row[1], row[2])
+                                print(f"✅ Loaded label: {row[0]} -> {row[1]} ({row[2]})")
                             except ValueError:
                                 continue
+                print(f"✅ Label map loaded with {len(self.label_map)} entries")
             else:
                 self.label_map = {}
+                print("❌ Label map file not found")
             
-            return self.is_model_ready()
+            model_ready = self.is_model_ready()
+            print(f"🔍 Model ready: {model_ready}")
+            return model_ready
             
         except Exception as e:
-            print(f"Error loading model: {e}")
+            print(f"❌ Error loading model: {e}")
             self.recognizer = None
             self.label_map = {}
             return False
-    
+        
     def is_model_ready(self) -> bool:
         """Check if model is loaded and ready for recognition"""
         return self.recognizer is not None and len(self.label_map) > 0
@@ -80,41 +90,62 @@ class FaceRecognizer:
         try:
             import cv2
             
+            print(f"🖼️ Input image shape: {image_array.shape}")
+            
             # Convert to grayscale if needed
             if len(image_array.shape) == 3:
                 gray = cv2.cvtColor(image_array, cv2.COLOR_BGR2GRAY)
             else:
                 gray = image_array
             
-            # Detect faces
+            print(f"🔍 Grayscale image shape: {gray.shape}")
+            
+            # Apply histogram equalization for better contrast
+            gray = cv2.equalizeHist(gray)
+            
+            # Apply Gaussian blur to reduce noise
+            gray = cv2.GaussianBlur(gray, (5, 5), 0)
+            
+            # More lenient face detection parameters for webcam
             faces = self.face_cascade.detectMultiScale(
                 gray,
-                scaleFactor=self.config.FACE_DETECTION_SCALE_FACTOR,
-                minNeighbors=self.config.FACE_DETECTION_MIN_NEIGHBORS,
-                minSize=self.config.FACE_DETECTION_MIN_SIZE
+                scaleFactor=1.1,
+                minNeighbors=3,
+                minSize=(30, 30),
+                flags=cv2.CASCADE_SCALE_IMAGE
             )
+            
+            print(f"👤 Faces detected: {len(faces)}")
             
             face_images = []
             face_coordinates = []
             
             for (x, y, w, h) in faces:
-                # Extract face region
-                face_img = gray[y:y+h, x:x+w]
+                print(f"   Face at: x={x}, y={y}, w={w}, h={h}")
+                # Extract face region with padding
+                padding = 10
+                x1 = max(0, x - padding)
+                y1 = max(0, y - padding)
+                x2 = min(gray.shape[1], x + w + padding)
+                y2 = min(gray.shape[0], y + h + padding)
+                
+                face_img = gray[y1:y2, x1:x2]
                 
                 # Resize to standard size for consistency
-                face_img = cv2.resize(face_img, (200, 200))
-                
-                # Apply histogram equalization for better contrast
-                face_img = cv2.equalizeHist(face_img)
-                
-                face_images.append(face_img)
-                face_coordinates.append((int(x), int(y), int(w), int(h)))
+                if face_img.size > 0:
+                    face_img = cv2.resize(face_img, (200, 200))
+                    
+                    # Apply additional histogram equalization
+                    face_img = cv2.equalizeHist(face_img)
+                    
+                    face_images.append(face_img)
+                    face_coordinates.append((int(x), int(y), int(w), int(h)))
             
             return face_images, face_coordinates
             
         except Exception as e:
-            raise ValueError(f"Face detection failed: {str(e)}")
-    
+            print(f"❌ Face detection error: {e}")
+            return [], []
     def recognize_faces(self, image_array) -> List[Dict]:
         """Recognize faces in image and return recognition results"""
         if not self.is_model_ready():
@@ -134,10 +165,15 @@ class FaceRecognizer:
                     # Predict using the recognizer
                     label, confidence = self.recognizer.predict(face_img)
                     
-                    # Convert confidence to percentage (lower is better in LBPH)
-                    confidence_percent = max(0, 100 - confidence)
+                    print(f"🔍 Face {i}: label={label}, confidence={confidence}")
                     
-                    if (confidence < self.config.RECOGNITION_CONFIDENCE_THRESHOLD and 
+                    # Convert confidence to percentage (lower is better in LBPH)
+                    confidence_percent = max(0, 100 - min(confidence, 100))
+                    
+                    # ✅ INCREASED CONFIDENCE THRESHOLD - THIS IS THE FIX
+                    confidence_threshold = 150  # Increased from 70 to 150
+                    
+                    if (confidence < confidence_threshold and 
                         label in self.label_map):
                         student_id, name = self.label_map[label]
                         results.append({
@@ -148,6 +184,7 @@ class FaceRecognizer:
                             'status': 'recognized',
                             'raw_confidence': confidence
                         })
+                        print(f"✅ Recognized: {name} (confidence: {confidence}, threshold: {confidence_threshold})")
                     else:
                         results.append({
                             'student_id': 'unknown',
@@ -157,6 +194,10 @@ class FaceRecognizer:
                             'status': 'unknown',
                             'raw_confidence': confidence
                         })
+                        print(f"❌ Unknown face (confidence: {confidence}, threshold: {confidence_threshold})")
+                        if label in self.label_map:
+                            student_id, name = self.label_map[label]
+                            print(f"   Would match: {name} but confidence too low")
                         
                 except Exception as e:
                     print(f"Error recognizing face {i}: {e}")
@@ -166,13 +207,62 @@ class FaceRecognizer:
             
         except Exception as e:
             raise ValueError(f"Face recognition failed: {str(e)}")
-    
-    def get_model_info(self) -> Dict:
-        """Get information about the loaded model"""
-        return {
-            'model_loaded': self.recognizer is not None,
-            'students_trained': len(self.label_map),
-            'label_map': self.label_map,
-            'model_path': str(self.model_path),
-            'label_map_path': str(self.label_map_path)
-        }
+    def _try_alternative_detection(self, image_array):
+        """Try alternative face detection methods"""
+        try:
+            import cv2
+            
+            # Convert to grayscale
+            if len(image_array.shape) == 3:
+                gray = cv2.cvtColor(image_array, cv2.COLOR_RGB2GRAY)
+            else:
+                gray = image_array
+            
+            # Try different cascade classifiers
+            cascades = [
+                cv2.data.haarcascades + 'haarcascade_frontalface_default.xml',
+                cv2.data.haarcascades + 'haarcascade_frontalface_alt.xml',
+                cv2.data.haarcascades + 'haarcascade_frontalface_alt2.xml',
+            ]
+            
+            for cascade_path in cascades:
+                if not os.path.exists(cascade_path):
+                    continue
+                    
+                cascade = cv2.CascadeClassifier(cascade_path)
+                if cascade.empty():
+                    continue
+                
+                faces = cascade.detectMultiScale(
+                    gray,
+                    scaleFactor=1.1,
+                    minNeighbors=3,
+                    minSize=(30, 30)
+                )
+                
+                if len(faces) > 0:
+                    results = []
+                    for (x, y, w, h) in faces:
+                        results.append({
+                            'student_id': 'unknown',
+                            'name': 'Unknown',
+                            'confidence': 0.0,
+                            'bounding_box': [int(x), int(y), int(w), int(h)],
+                            'status': 'unknown',
+                            'raw_confidence': 100.0
+                        })
+                    return results
+                    
+            return []
+            
+        except Exception as e:
+            print(f"Alternative detection failed: {e}")
+            return []
+    # Add this debug method to your FaceRecognizer class
+    def debug_model_info(self):
+        print("🔍 Model Debug Info:")
+        print(f"Model loaded: {self.recognizer is not None}")
+        print(f"Label map entries: {len(self.label_map)}")
+        print("Label map contents:")
+        for label_id, (student_id, name) in self.label_map.items():
+            print(f"  Label {label_id}: {name} ({student_id})")

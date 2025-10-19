@@ -25,33 +25,44 @@ export function CameraInterface({ onFaceRecognized, onUnknownFace }: CameraInter
   const videoConstraints = {
     width: 1280,
     height: 720,
-    facingMode: "user"
+    facingMode: "user",
+    frameRate: { ideal: 30, max: 60 }
   };
 
   const capture = useCallback(async () => {
     if (!webcamRef.current) return;
 
     setIsCapturing(true);
-    const imageSrc = webcamRef.current.getScreenshot();
     
-    if (!imageSrc) {
-      alert('Failed to capture image. Please ensure camera permissions are granted.');
-      setIsCapturing(false);
-      return;
-    }
-
     try {
+      // Get screenshot - remove the quality parameter as it's not supported
+      const imageSrc = webcamRef.current.getScreenshot();
+      
+      if (!imageSrc) {
+        alert('Failed to capture image. Please ensure camera permissions are granted and your face is clearly visible.');
+        setIsCapturing(false);
+        return;
+      }
+
+      console.log("📸 Image captured, starting recognition...");
+      
       // Recognize faces
       const results = await recognizeFaces(imageSrc);
+      
+      console.log(`🔍 Recognition results: ${results.length} faces detected`);
       
       if (results.length > 0) {
         const recognizedFaces = results.filter(r => r.status === 'recognized');
         const unknownFaces = results.filter(r => r.status === 'unknown');
 
+        console.log(`✅ Recognized: ${recognizedFaces.length}, ❓ Unknown: ${unknownFaces.length}`);
+
         if (recognizedFaces.length > 0) {
           // Mark attendance for recognized faces
           setIsMarkingAttendance(true);
           const markedCount = await markAttendance(recognizedFaces);
+          
+          console.log(`🎯 Marked attendance for ${markedCount} students`);
           
           if (markedCount > 0) {
             // Show details for first recognized student
@@ -61,14 +72,15 @@ export function CameraInterface({ onFaceRecognized, onUnknownFace }: CameraInter
             }
           }
         } else if (unknownFaces.length > 0) {
+          console.log("🆕 Unknown face detected");
           onUnknownFace();
         }
       } else {
-        alert('No faces detected. Please ensure your face is clearly visible.');
+        alert('No faces detected. Please ensure:\n• Your face is clearly visible\n• Good lighting conditions\n• Face is within the green guide box\n• No obstructions (glasses, hats, etc.)');
       }
     } catch (error) {
-      console.error('Error processing image:', error);
-      alert('Failed to process image. Please try again.');
+      console.error('❌ Error processing image:', error);
+      alert('Failed to process image. Please try again with better lighting and clear face visibility.');
     } finally {
       setIsCapturing(false);
       setIsMarkingAttendance(false);
