@@ -295,3 +295,52 @@ class TrainingService:
     def _get_current_timestamp(self) -> str:
         """Get current timestamp string"""
         return datetime.now().isoformat()
+def debug_image_loading(self):
+    """Debug method to check image loading issues"""
+    try:
+        print("🐛 DEBUG: Starting image loading debug...")
+        
+        # Get training status first
+        status = self.get_training_status()
+        ready_students = status.get('ready_students_details', {})
+        
+        print(f"📊 DEBUG: {len(ready_students)} ready students found")
+        
+        if not ready_students:
+            print("❌ DEBUG: No ready students found!")
+            return
+        
+        # Check each ready student
+        for student_id, student_info in ready_students.items():
+            print(f"🔍 DEBUG: Checking student {student_id}...")
+            
+            # Get student from database
+            student = self.db.get_student(student_id)
+            print(f"   Database record: {student}")
+            
+            # Get images
+            student_images = self._get_student_images(student_id)
+            print(f"   Found {len(student_images)} image files")
+            
+            # Check each image
+            for img_path in student_images:
+                print(f"   📁 Image: {img_path}")
+                print(f"      Exists: {img_path.exists()}")
+                print(f"      Size: {img_path.stat().st_size if img_path.exists() else 'N/A'} bytes")
+                
+                # Try to load with OpenCV
+                try:
+                    import cv2
+                    img = cv2.imread(str(img_path))
+                    print(f"      OpenCV load: {'SUCCESS' if img is not None else 'FAILED'}")
+                    if img is not None:
+                        print(f"      Shape: {img.shape}")
+                except Exception as e:
+                    print(f"      OpenCV error: {e}")
+        
+        print("🐛 DEBUG: Image loading debug completed")
+        
+    except Exception as e:
+        print(f"🐛 DEBUG Error: {e}")
+        import traceback
+        traceback.print_exc()

@@ -1,12 +1,11 @@
-# backend/config/__init__.py (create this file if it doesn't exist)
 import os
 from pathlib import Path
 
 class Config:
     """Application configuration"""
     
-    # Base paths
-    BASE_DIR = Path(__file__).parent.parent
+    # Base paths - use absolute paths
+    BASE_DIR = Path(__file__).parent.parent  # Go up to project root
     DATA_DIR = BASE_DIR / "data"
     
     # Database
@@ -40,5 +39,16 @@ class Config:
     HOST = os.getenv('HOST', '0.0.0.0')
     PORT = int(os.getenv('PORT', 5000))
     DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
+
+    def __init__(self):
+        # Create directories if they don't exist
+        self.FACES_DIR.mkdir(parents=True, exist_ok=True)
+        self.MODELS_DIR.mkdir(parents=True, exist_ok=True)
+        self.ATTENDANCE_DIR.mkdir(parents=True, exist_ok=True)
+        self.TEMP_DIR.mkdir(parents=True, exist_ok=True)
+        
+        print(f"🔧 Configuration loaded:")
+        print(f"   FACES_DIR: {self.FACES_DIR}")
+        print(f"   DATABASE_PATH: {self.DATABASE_PATH}")
 
 config = Config()

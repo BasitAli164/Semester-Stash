@@ -264,3 +264,138 @@ def debug_students():
             'success': False,
             'error': str(e)
         }), 500
+@system_bp.route('/system/debug/images', methods=['GET'])
+def debug_images():
+    """Debug endpoint to check image loading issues"""
+    try:
+        from services.training_service import TrainingService
+        
+        training_service = TrainingService()
+        training_service.debug_image_loading()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Debug completed - check server console for details'
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Debug error: {str(e)}'
+        }), 500
+@system_bp.route('/system/debug/model', methods=['GET'])
+def debug_model():
+    """Debug the trained model and label mapping"""
+    try:
+        from services.training_service import TrainingService
+        from utils.file_manager import FileManager
+        import os
+        from pathlib import Path
+        
+        training_service = TrainingService()
+        file_manager = FileManager()
+        
+        # Check model file
+        model_path = Path(training_service.config.MODEL_FILE)
+        model_exists = model_path.exists()
+        model_size = model_path.stat().st_size if model_exists else 0
+        
+        # Check label mapping
+        label_map_path = Path(training_service.config.LABEL_MAP_FILE)
+        label_map_exists = label_map_path.exists()
+        
+        # Check faces directory
+        faces_dir = Path(training_service.config.FACES_DIR)
+        faces_exist = faces_dir.exists()
+        
+        # Count actual images
+        image_count = 0
+        student_dirs = []
+        if faces_exist:
+            for item in faces_dir.iterdir():
+                if item.is_dir():
+                    student_dirs.append(item.name)
+                    images = list(item.glob('*.jpg')) + list(item.glob('*.png'))
+                    image_count += len(images)
+        
+        return jsonify({
+            'success': True,
+            'model': {
+                'path': str(model_path),
+                'exists': model_exists,
+                'size_bytes': model_size
+            },
+            'label_map': {
+                'path': str(label_map_path),
+                'exists': label_map_exists
+            },
+            'faces_directory': {
+                'path': str(faces_dir),
+                'exists': faces_exist,
+                'total_images': image_count,
+                'student_directories': student_dirs
+            },
+            'training_status': training_service.get_training_status()
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@system_bp.route('/system/debug/recognition', methods=['POST'])
+def debug_recognition():
+    """Debug face recognition process"""
+    try:
+        from services.recognition_service import RecognitionService
+        import cv2
+        import numpy as np
+        from flask import request
+        
+        # Get image from request
+        if 'image' not in request.files:
+            return jsonify({'success': False, 'error': 'No image provided'}), 400
+        
+        image_file = request.files['image']
+        image_data = image_file.read()
+        
+        # Convert to numpy array
+        nparr = np.frombuffer(image_data, np.uint8)
+        image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        
+        if image is None:
+            return jsonify({'success': False, 'error': 'Could not decode image'}), 400
+        
+        recognition_service = RecognitionService()
+        
+        # Test face detection
+        faces_detected = recognition_service.detect_faces(image)
+        
+        # Test recognition
+        recognition_results = []
+        if faces_detected:
+            for face in faces_detected:
+                result = recognition_service.recognize_face(face)
+                recognition_results.append(result)
+        
+        return jsonify({
+            'success': True,
+            'image_info': {
+                'shape': image.shape,
+                'dtype': str(image.dtype)
+            },
+            'face_detection': {
+                'faces_detected': len(faces_detected),
+                'details': [{'x': f[0], 'y': f[1], 'w': f[2], 'h': f[3]} for f in faces_detected]
+            },
+            'recognition_results': recognition_results
+        }), 200
+        
+    except Exception as e:
+        import traceback
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }), 500
