@@ -1,0 +1,21 @@
+# Core Flask
+flask==3.0.0
+flask-cors==4.0.0
+flask-jwt-extended==4.6.0
+flask-sqlalchemy==3.1.1
+flask-bcrypt==1.0.1
+
+# AI & Computer Vision
+deepface==0.0.92
+opencv-python==4.9.0.80
+numpy==1.26.0
+pillow==10.1.0
+
+# Database
+sqlalchemy==2.0.25
+sqlite3
+
+# Utilities
+python-dotenv==1.0.0
+werkzeug==3.0.1
+python-multipart==0.0.6
