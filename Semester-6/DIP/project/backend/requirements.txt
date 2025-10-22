@@ -13,7 +13,7 @@ pillow==10.1.0
 
 # Database
 sqlalchemy==2.0.25
-sqlite3
+# sqlite3 (built-in, no need to install)
 
 # Utilities
 python-dotenv==1.0.0
