@@ -1,7 +1,5 @@
 import os
 import numpy as np
-from deepface import DeepFace
-from deepface.commons import functions
 import cv2
 from api.config.config import Config
 
@@ -10,6 +8,16 @@ class FaceRecognition:
         self.model_name = Config.DEEPFACE_MODEL
         self.detector_backend = Config.DEEPFACE_DETECTOR
         self.threshold = Config.RECOGNITION_THRESHOLD
+        
+        # Lazy import to avoid issues at module load time
+        self.deepface = None
+    
+    def _import_deepface(self):
+        """Lazy import DeepFace to handle compatibility issues"""
+        if self.deepface is None:
+            from deepface import DeepFace
+            self.deepface = DeepFace
+        return self.deepface
     
     def preprocess_image(self, image_path):
         """Preprocess image for face recognition"""
@@ -19,20 +27,17 @@ class FaceRecognition:
             if img is None:
                 raise ValueError("Could not read image")
             
-            # Detect faces using DeepFace
-            faces = DeepFace.extract_faces(
-                img_path=image_path,
-                detector_backend=self.detector_backend,
-                enforce_detection=False
-            )
+            # Detect faces using OpenCV
+            face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            faces = face_cascade.detectMultiScale(gray, 1.1, 4)
             
-            if not faces or len(faces) == 0:
+            if len(faces) == 0:
                 raise ValueError("No faces detected in the image")
             
             # Return the first detected face region
-            face_region = faces[0]['facial_area']
-            face_img = img[face_region['y']:face_region['y']+face_region['h'],
-                          face_region['x']:face_region['x']+face_region['w']]
+            x, y, w, h = faces[0]
+            face_img = img[y:y+h, x:x+w]
             
             # Resize to standard size
             face_img = cv2.resize(face_img, (224, 224))
@@ -45,12 +50,14 @@ class FaceRecognition:
     def generate_embedding(self, image_path):
         """Generate face embedding from image"""
         try:
+            DeepFace = self._import_deepface()
+            
             # Use DeepFace to represent face
             embedding_objs = DeepFace.represent(
                 img_path=image_path,
                 model_name=self.model_name,
                 detector_backend=self.detector_backend,
-                enforce_detection=True
+                enforce_detection=False
             )
             
             if not embedding_objs:
@@ -88,6 +95,8 @@ class FaceRecognition:
     
     def cosine_similarity(self, a, b):
         """Calculate cosine similarity between two vectors"""
+        a = np.array(a)
+        b = np.array(b)
         return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
     
     def find_best_match(self, live_image_path, embeddings_dict):
@@ -115,3 +124,31 @@ class FaceRecognition:
             
         except Exception as e:
             raise Exception(f"Face matching failed: {str(e)}")
+    
+    def extract_faces(self, image_path):
+        """Extract faces from image using OpenCV (fallback method)"""
+        try:
+            img = cv2.imread(image_path)
+            if img is None:
+                return []
+            
+            face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            faces = face_cascade.detectMultiScale(gray, 1.1, 4)
+            
+            face_data = []
+            for (x, y, w, h) in faces:
+                face_data.append({
+                    'facial_area': {
+                        'x': int(x),
+                        'y': int(y),
+                        'w': int(w),
+                        'h': int(h)
+                    },
+                    'confidence': 1.0
+                })
+            
+            return face_data
+            
+        except Exception as e:
+            raise Exception(f"Face extraction failed: {str(e)}")
