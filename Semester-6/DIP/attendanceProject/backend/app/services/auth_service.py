@@ -1,7 +1,7 @@
 from app import db, jwt
-from app.models.user import User, UserRole
+from app.models.user import User
 from flask import current_app
-from datetime import datetime, timezone
+from datetime import datetime
 
 @jwt.user_identity_loader
 def user_identity_lookup(user):
@@ -42,7 +42,7 @@ class AuthService:
     """Service class for authentication operations"""
     
     @staticmethod
-    def register_user(name, username, password, role=UserRole.STUDENT, email=None, image_dir=None):
+    def register_user(name, username, password, email=None, image_dir=None):
         """Register a new user"""
         try:
             # Check if user already exists
@@ -57,7 +57,6 @@ class AuthService:
                 name=name,
                 username=username,
                 email=email,
-                role=role,
                 image_dir=image_dir
             )
             user.password = password  # This hashes the password
@@ -86,9 +85,13 @@ class AuthService:
             return None, f"Authentication error: {str(e)}"
     
     @staticmethod
-    def change_password(user, current_password, new_password):
+    def change_password(user_id, current_password, new_password):
         """Change user password"""
         try:
+            user = User.query.get(user_id)
+            if not user:
+                return False, "User not found"
+            
             if not user.verify_password(current_password):
                 return False, "Current password is incorrect"
             

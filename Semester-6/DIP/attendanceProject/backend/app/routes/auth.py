@@ -1,8 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from app.services.auth_service import AuthService
-from app.utils.decorators import admin_required
-from app.models.user import UserRole
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -46,24 +44,16 @@ def login():
         }), 500
 
 @auth_bp.route('/register', methods=['POST'])
-@admin_required
-def register(current_user):
-    """Register new user (Admin only)"""
+def register():
+    """Register new user"""
     try:
         data = request.get_json()
         
-        required_fields = ['name', 'username', 'password', 'role']
+        required_fields = ['name', 'username', 'password']
         if not all(field in data for field in required_fields):
             return jsonify({
-                'message': 'Missing required fields',
+                'message': 'Missing required fields: name, username, password',
                 'error': 'missing_fields'
-            }), 400
-        
-        # Validate role
-        if data['role'] not in [role.value for role in UserRole]:
-            return jsonify({
-                'message': 'Invalid role',
-                'error': 'invalid_role'
             }), 400
         
         # Register user
@@ -71,7 +61,6 @@ def register(current_user):
             name=data['name'],
             username=data['username'],
             password=data['password'],
-            role=UserRole(data['role']),
             email=data.get('email'),
             image_dir=data.get('image_dir')
         )
@@ -126,13 +115,6 @@ def update_profile():
         current_user_id = get_jwt_identity()
         data = request.get_json()
         
-        # Students cannot change their role
-        if 'role' in data:
-            return jsonify({
-                'message': 'Cannot change role',
-                'error': 'role_change_not_allowed'
-            }), 403
-        
         updated_user, message = AuthService.update_user_profile(current_user_id, **data)
         
         if not updated_user:
@@ -175,7 +157,7 @@ def change_password():
             }), 404
         
         success, message = AuthService.change_password(
-            user=User.query.get(current_user_id),
+            user_id=current_user_id,
             current_password=data['current_password'],
             new_password=data['new_password']
         )

@@ -1,28 +1,21 @@
 from flask import Blueprint, request, jsonify
 import os
-import base64
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.services.face_service import FaceRecognitionService
 from app.utils.file_handlers import FileHandler
-from app.utils.decorators import admin_required
 from app.models.user import User
 
-face_bp = Blueprint('face_recognition', __name__)  # Changed blueprint name
+face_bp = Blueprint('face_recognition', __name__)
 
 @face_bp.route('/register', methods=['POST'])
-@admin_required
-def register_faces(current_user):
-    """Register faces for a user (Admin only)"""
+@jwt_required()
+def register_faces():
+    """Register faces for the current user"""
     try:
-        user_id = request.form.get('user_id')
-        if not user_id:
-            return jsonify({
-                'message': 'User ID is required',
-                'error': 'missing_user_id'
-            }), 400
+        user_id = get_jwt_identity()
+        current_user = User.query.get(user_id)
         
-        user = User.query.get(user_id)
-        if not user:
+        if not current_user:
             return jsonify({
                 'message': 'User not found',
                 'error': 'user_not_found'
@@ -161,7 +154,6 @@ def verify_face():
             }), 400
         
         # Verify face - need user_id from JWT token
-        from flask_jwt_extended import get_jwt_identity
         user_id = get_jwt_identity()
         
         face_service = FaceRecognitionService()
@@ -192,11 +184,12 @@ def verify_face():
             'error': str(e)
         }), 500
 
-@face_bp.route('/embeddings/<int:user_id>', methods=['GET'])
-@admin_required
-def get_user_embeddings(current_user, user_id):
-    """Get embedding count for a user (Admin only)"""
+@face_bp.route('/embeddings', methods=['GET'])
+@jwt_required()
+def get_user_embeddings():
+    """Get embedding count for current user"""
     try:
+        user_id = get_jwt_identity()
         face_service = FaceRecognitionService()
         count = face_service.get_user_embedding_count(user_id)
         

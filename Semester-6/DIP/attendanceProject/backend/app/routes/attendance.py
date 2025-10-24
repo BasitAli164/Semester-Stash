@@ -1,12 +1,12 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db
-from app.models.user import User, UserRole
+from app.models.user import User
 from app.models.attendance import Attendance, AttendanceStatus
-from app.utils.decorators import admin_required, student_required
 from app.services.face_service import FaceRecognitionService
 from datetime import datetime, date, timedelta
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -14,10 +14,18 @@ attendance_bp = Blueprint('attendance', __name__)
 
 @attendance_bp.route('/mark', methods=['POST'])
 @jwt_required()
-@student_required
-def mark_attendance(current_user):
-    """Mark attendance using face recognition (Student only)"""
+def mark_attendance():
+    """Mark attendance using face recognition"""
     try:
+        user_id = get_jwt_identity()
+        current_user = User.query.get(user_id)
+        
+        if not current_user:
+            return jsonify({
+                'message': 'User not found',
+                'error': 'user_not_found'
+            }), 404
+        
         # Check if attendance already marked for today
         today = date.today()
         existing_attendance = Attendance.query.filter_by(
@@ -36,7 +44,6 @@ def mark_attendance(current_user):
         confidence = None
         if 'image_data' in request.json or 'image' in request.files:
             from app.utils.file_handlers import FileHandler
-            import os
             
             image_path = None
             
@@ -103,29 +110,24 @@ def mark_attendance(current_user):
             'error': str(e)
         }), 500
 
-@attendance_bp.route('/admin/mark-manual', methods=['POST'])
-@admin_required
-def mark_attendance_manual(current_user):
-    """Manually mark attendance for a student (Admin only)"""
+@attendance_bp.route('/mark-manual', methods=['POST'])
+@jwt_required()
+def mark_attendance_manual():
+    """Manually mark attendance"""
     try:
-        data = request.get_json()
+        user_id = get_jwt_identity()
+        current_user = User.query.get(user_id)
         
-        required_fields = ['user_id', 'date', 'status']
-        if not all(field in data for field in required_fields):
+        if not current_user:
             return jsonify({
-                'message': 'Missing required fields: user_id, date, status',
-                'error': 'missing_fields'
-            }), 400
-        
-        student = User.query.get(data['user_id'])
-        if not student or student.role != UserRole.STUDENT:
-            return jsonify({
-                'message': 'Student not found',
-                'error': 'student_not_found'
+                'message': 'User not found',
+                'error': 'user_not_found'
             }), 404
         
+        data = request.get_json()
+        
         try:
-            attendance_date = datetime.strptime(data['date'], '%Y-%m-%d').date()
+            attendance_date = datetime.strptime(data.get('date', date.today().isoformat()), '%Y-%m-%d').date()
         except ValueError:
             return jsonify({
                 'message': 'Invalid date format. Use YYYY-MM-DD',
@@ -134,7 +136,7 @@ def mark_attendance_manual(current_user):
         
         # Check if attendance already exists
         existing = Attendance.query.filter_by(
-            user_id=data['user_id'], 
+            user_id=current_user.id, 
             date=attendance_date
         ).first()
         
@@ -147,10 +149,10 @@ def mark_attendance_manual(current_user):
         
         # Create attendance record
         attendance = Attendance(
-            user_id=data['user_id'],
+            user_id=current_user.id,
             date=attendance_date,
             time=datetime.utcnow().time(),
-            status=AttendanceStatus(data['status']),
+            status=AttendanceStatus(data.get('status', 'present')),
             method='manual',
             confidence=None
         )
@@ -171,24 +173,29 @@ def mark_attendance_manual(current_user):
             'error': str(e)
         }), 500
 
-@attendance_bp.route('/admin/reports', methods=['GET'])
-@admin_required
-def get_attendance_reports(current_user):
-    """Get attendance reports with filtering (Admin only)"""
+@attendance_bp.route('/reports', methods=['GET'])
+@jwt_required()
+def get_attendance_reports():
+    """Get attendance reports with filtering"""
     try:
+        user_id = get_jwt_identity()
+        current_user = User.query.get(user_id)
+        
+        if not current_user:
+            return jsonify({
+                'message': 'User not found',
+                'error': 'user_not_found'
+            }), 404
+        
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 50, type=int)
-        user_id = request.args.get('user_id')
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
         status = request.args.get('status')
         
-        query = Attendance.query.join(User)
+        query = Attendance.query.filter_by(user_id=current_user.id)
         
         # Apply filters
-        if user_id:
-            query = query.filter(Attendance.user_id == user_id)
-        
         if start_date:
             try:
                 start_date_obj = datetime.strptime(start_date, '%Y-%m-%d').date()
@@ -243,24 +250,33 @@ def get_attendance_reports(current_user):
             'error': str(e)
         }), 500
 
-@attendance_bp.route('/admin/stats', methods=['GET'])
-@admin_required
-def get_admin_attendance_stats(current_user):
-    """Get admin attendance statistics (Admin only)"""
+@attendance_bp.route('/stats', methods=['GET'])
+@jwt_required()
+def get_attendance_stats():
+    """Get attendance statistics"""
     try:
+        user_id = get_jwt_identity()
+        current_user = User.query.get(user_id)
+        
+        if not current_user:
+            return jsonify({
+                'message': 'User not found',
+                'error': 'user_not_found'
+            }), 404
+        
         # Date range (current month)
         today = date.today()
         first_day_of_month = today.replace(day=1)
         
         # Total statistics
-        total_students = User.query.filter_by(role=UserRole.STUDENT, is_active=True).count()
-        total_attendance_today = Attendance.query.filter_by(date=today).count()
+        total_attendance_today = Attendance.query.filter_by(user_id=current_user.id, date=today).count()
         
         # Monthly statistics
         monthly_attendance = db.session.query(
             Attendance.status,
             db.func.count(Attendance.id)
         ).filter(
+            Attendance.user_id == current_user.id,
             Attendance.date >= first_day_of_month,
             Attendance.date <= today
         ).group_by(Attendance.status).all()
@@ -273,7 +289,7 @@ def get_admin_attendance_stats(current_user):
         last_7_days = []
         for i in range(6, -1, -1):
             day = today - timedelta(days=i)
-            day_attendance = Attendance.query.filter_by(date=day).count()
+            day_attendance = Attendance.query.filter_by(user_id=current_user.id, date=day).count()
             last_7_days.append({
                 'date': day.isoformat(),
                 'attendance_count': day_attendance
@@ -281,9 +297,8 @@ def get_admin_attendance_stats(current_user):
         
         stats = {
             'overview': {
-                'total_students': total_students,
                 'attendance_today': total_attendance_today,
-                'attendance_rate_today': (total_attendance_today / total_students * 100) if total_students > 0 else 0
+                'attendance_rate_today': (total_attendance_today / 1 * 100) if total_attendance_today > 0 else 0
             },
             'monthly': monthly_stats,
             'last_7_days': last_7_days
@@ -295,17 +310,128 @@ def get_admin_attendance_stats(current_user):
         }), 200
         
     except Exception as e:
-        logger.error(f"Error getting admin attendance stats: {str(e)}")
+        logger.error(f"Error getting attendance stats: {str(e)}")
         return jsonify({
             'message': 'Failed to retrieve attendance statistics',
             'error': str(e)
         }), 500
 
-@attendance_bp.route('/admin/export', methods=['GET'])
-@admin_required
-def export_attendance(current_user):
-    """Export attendance data to CSV (Admin only)"""
+@attendance_bp.route('/today', methods=['GET'])
+@jwt_required()
+def get_today_attendance():
+    """Get today's attendance status"""
     try:
+        user_id = get_jwt_identity()
+        current_user = User.query.get(user_id)
+        
+        if not current_user:
+            return jsonify({
+                'message': 'User not found',
+                'error': 'user_not_found'
+            }), 404
+        
+        today = date.today()
+        attendance = Attendance.query.filter_by(
+            user_id=current_user.id, 
+            date=today
+        ).first()
+        
+        attendance_data = attendance.to_dict() if attendance else None
+        
+        return jsonify({
+            'message': 'Today\'s attendance retrieved successfully',
+            'attendance': attendance_data,
+            'date': today.isoformat()
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Error getting today's attendance: {str(e)}")
+        return jsonify({
+            'message': 'Failed to retrieve attendance',
+            'error': str(e)
+        }), 500
+
+@attendance_bp.route('/history', methods=['GET'])
+@jwt_required()
+def get_attendance_history():
+    """Get attendance history with pagination"""
+    try:
+        user_id = get_jwt_identity()
+        current_user = User.query.get(user_id)
+        
+        if not current_user:
+            return jsonify({
+                'message': 'User not found',
+                'error': 'user_not_found'
+            }), 404
+        
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 30, type=int)
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        
+        query = Attendance.query.filter_by(user_id=current_user.id)
+        
+        # Date filtering
+        if start_date:
+            try:
+                start_date_obj = datetime.strptime(start_date, '%Y-%m-%d').date()
+                query = query.filter(Attendance.date >= start_date_obj)
+            except ValueError:
+                return jsonify({
+                    'message': 'Invalid start date format. Use YYYY-MM-DD',
+                    'error': 'invalid_date_format'
+                }), 400
+        
+        if end_date:
+            try:
+                end_date_obj = datetime.strptime(end_date, '%Y-%m-%d').date()
+                query = query.filter(Attendance.date <= end_date_obj)
+            except ValueError:
+                return jsonify({
+                    'message': 'Invalid end date format. Use YYYY-MM-DD',
+                    'error': 'invalid_date_format'
+                }), 400
+        
+        # Order by date descending
+        attendance_pagination = query.order_by(Attendance.date.desc()).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+        
+        attendance_data = {
+            'attendance': [attendance.to_dict() for attendance in attendance_pagination.items],
+            'total': attendance_pagination.total,
+            'pages': attendance_pagination.pages,
+            'current_page': page,
+            'per_page': per_page
+        }
+        
+        return jsonify({
+            'message': 'Attendance history retrieved successfully',
+            'data': attendance_data
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Error getting attendance history: {str(e)}")
+        return jsonify({
+            'message': 'Failed to retrieve attendance history',
+            'error': str(e)
+        }), 500
+
+@attendance_bp.route('/export', methods=['GET'])
+@jwt_required()
+def export_attendance():
+    """Export attendance data to CSV"""
+    try:
+        user_id = get_jwt_identity()
+        current_user = User.query.get(user_id)
+        
+        if not current_user:
+            return jsonify({
+                'message': 'User not found',
+                'error': 'user_not_found'
+            }), 404
+        
         import csv
         from io import StringIO
         from flask import Response
@@ -313,7 +439,7 @@ def export_attendance(current_user):
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
         
-        query = Attendance.query.join(User).filter(User.role == UserRole.STUDENT)
+        query = Attendance.query.filter_by(user_id=current_user.id)
         
         if start_date:
             start_date_obj = datetime.strptime(start_date, '%Y-%m-%d').date()
@@ -330,15 +456,13 @@ def export_attendance(current_user):
         writer = csv.writer(output)
         
         # Write header
-        writer.writerow(['Date', 'Time', 'Student ID', 'Student Name', 'Status', 'Method', 'Confidence'])
+        writer.writerow(['Date', 'Time', 'Status', 'Method', 'Confidence'])
         
         # Write data
         for attendance in attendance_data:
             writer.writerow([
                 attendance.date.isoformat(),
                 attendance.time.isoformat() if attendance.time else '',
-                attendance.user_id,
-                attendance.user.name,
                 attendance.status.value,
                 attendance.method,
                 attendance.confidence or ''

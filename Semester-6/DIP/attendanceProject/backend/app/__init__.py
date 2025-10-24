@@ -55,17 +55,13 @@ def create_app(config_class='default'):
         identity = jwt_data["sub"]
         return User.query.get(identity)
     
-    # Register all blueprints (TEMPORARILY COMMENT OUT face_bp)
+    # Register all blueprints
     from app.routes.auth import auth_bp
-    from app.routes.admin import admin_bp
-    from app.routes.student import student_bp
-    from app.routes.face_recognition import face_bp  # TEMPORARILY COMMENTED OUT
+    from app.routes.face_recognition import face_bp
     from app.routes.attendance import attendance_bp
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
-    app.register_blueprint(admin_bp, url_prefix='/api/admin')
-    app.register_blueprint(student_bp, url_prefix='/api/student')
-    app.register_blueprint(face_bp, url_prefix='/api/face')  # TEMPORARILY COMMENTED OUT
+    app.register_blueprint(face_bp, url_prefix='/api/face')
     app.register_blueprint(attendance_bp, url_prefix='/api/attendance')
     
     # Create storage directories and perform startup tasks

@@ -1,6 +1,0 @@
-export { useAuthStore } from './auth-store'
-export { useAdminStore } from './admin-store'
-export { useStudentStore } from './student-store'
-export { useAttendanceStore } from './attendance-store'
-export { useFaceRecognitionStore } from './face-recognition-store'
-export { useUIStore } from './ui-store'

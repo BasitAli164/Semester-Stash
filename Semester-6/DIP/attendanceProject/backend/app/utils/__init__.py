@@ -1,5 +1,4 @@
 # Import all utilities for easy access
-from app.utils.decorators import role_required, admin_required, student_required, jwt_required_optional
 from app.utils.error_handlers import (
     APIError, ValidationError, AuthenticationError, 
     AuthorizationError, NotFoundError, FaceRecognitionError,
@@ -12,9 +11,6 @@ from app.utils.config_manager import ConfigManager
 from app.utils.logging_config import setup_logging, get_logger
 
 __all__ = [
-    # Decorators
-    'role_required', 'admin_required', 'student_required', 'jwt_required_optional',
-    
     # Error Handling
     'APIError', 'ValidationError', 'AuthenticationError', 'AuthorizationError', 
     'NotFoundError', 'FaceRecognitionError', 'validate_required_fields', 
