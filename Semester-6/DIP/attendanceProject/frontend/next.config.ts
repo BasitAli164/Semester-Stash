@@ -1,19 +1,19 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ['axios'],
-  },
   async rewrites() {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:5000/api/:path*', // Proxy to backend
+        destination:
+          process.env.NODE_ENV === 'development'
+            ? 'http://127.0.0.1:5328/api/:path*' // Flask backend during dev
+            : '/api/', // Production proxy
       },
     ];
   },
-  images: {
-    domains: ['localhost'],
+  experimental: {
+    serverComponentsExternalPackages: [],
   },
 };
 
