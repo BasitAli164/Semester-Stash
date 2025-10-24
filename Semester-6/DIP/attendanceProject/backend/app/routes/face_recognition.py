@@ -1,12 +1,13 @@
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, request, jsonify
 import os
 import base64
+from flask_jwt_extended import jwt_required
 from app.services.face_service import FaceRecognitionService
 from app.utils.file_handlers import FileHandler
-from app.utils.decorators import admin_required, jwt_required
+from app.utils.decorators import admin_required
 from app.models.user import User
 
-face_bp = Blueprint('face', __name__)
+face_bp = Blueprint('face_recognition', __name__)  # Changed blueprint name
 
 @face_bp.route('/register', methods=['POST'])
 @admin_required
@@ -66,8 +67,8 @@ def register_faces(current_user):
         }), 500
 
 @face_bp.route('/recognize', methods=['POST'])
-@jwt_required
-def recognize_face(current_user):
+@jwt_required()
+def recognize_face():
     """Recognize a face from uploaded image"""
     try:
         # Check if image is provided
@@ -130,8 +131,8 @@ def recognize_face(current_user):
         }), 500
 
 @face_bp.route('/verify', methods=['POST'])
-@jwt_required
-def verify_face(current_user):
+@jwt_required()
+def verify_face():
     """Verify if face matches current user"""
     try:
         if 'image' not in request.files and 'image_data' not in request.json:
@@ -146,12 +147,12 @@ def verify_face(current_user):
         if 'image' in request.files:
             file = request.files['image']
             if file and FileHandler.allowed_file(file.filename):
-                image_path = FileHandler.save_uploaded_file(file, current_user.id, 'verification')
+                image_path = FileHandler.save_uploaded_file(file, 'temp', 'verification')
         
         # Handle base64 image data
         elif 'image_data' in request.json:
             base64_data = request.json['image_data']
-            image_path = FileHandler.save_base64_image(base64_data, current_user.id, 'verification')
+            image_path = FileHandler.save_base64_image(base64_data, 'temp', 'verification')
         
         if not image_path:
             return jsonify({
@@ -159,13 +160,16 @@ def verify_face(current_user):
                 'error': 'invalid_image'
             }), 400
         
-        # Verify face
+        # Verify face - need user_id from JWT token
+        from flask_jwt_extended import get_jwt_identity
+        user_id = get_jwt_identity()
+        
         face_service = FaceRecognitionService()
         threshold = request.json.get('threshold', 0.4)
         
         verified, confidence, message = face_service.verify_face(
             image_path, 
-            current_user.id, 
+            user_id,
             threshold
         )
         
@@ -190,7 +194,7 @@ def verify_face(current_user):
 
 @face_bp.route('/embeddings/<int:user_id>', methods=['GET'])
 @admin_required
-def get_embeddings(current_user, user_id):
+def get_user_embeddings(current_user, user_id):
     """Get embedding count for a user (Admin only)"""
     try:
         face_service = FaceRecognitionService()
@@ -208,7 +212,7 @@ def get_embeddings(current_user, user_id):
         }), 500
 
 @face_bp.route('/test', methods=['GET'])
-def test_face_recognition():
+def test_face_service():
     """Test endpoint for face recognition service"""
     return jsonify({
         'message': 'Face recognition routes are working',
