@@ -1,6 +1,6 @@
 import { ProtectedRoute } from '@/components/protected-route'
-import { DashboardNavbar } from '@/components/ui/navbar'
-import { DashboardSidebar } from '@/components/ui/sidebar'
+import { Navbar } from '@/components/ui/navbar'
+import { Sidebar } from '@/components/ui/sidebar'
 
 export default function DashboardLayout({
   children,
@@ -10,11 +10,13 @@ export default function DashboardLayout({
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <DashboardNavbar />
+        <Navbar />
         <div className="flex">
-          <DashboardSidebar />
-          <main className="flex-1 lg:ml-64 min-h-screen">
-            {children}
+          <Sidebar />
+          <main className="flex-1 lg:ml-0">
+            <div className="p-6">
+              {children}
+            </div>
           </main>
         </div>
       </div>

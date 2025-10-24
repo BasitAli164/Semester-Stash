@@ -9,16 +9,28 @@ import { Eye, EyeOff, Loader2, User, Lock, Mail, UserCircle } from 'lucide-react
 import { useAuth } from '@/hooks/use-auth'
 import { useToast } from '@/hooks/use-toast'
 
+// Fixed Zod schema - simplified enum definition
 const registerSchema = z.object({
-  name: z.string().min(1, 'Name is required').min(2, 'Name must be at least 2 characters'),
-  username: z.string().min(1, 'Username is required').min(3, 'Username must be at least 3 characters'),
-  email: z.string().email('Invalid email address').optional().or(z.literal('')),
+  name: z.string()
+    .min(1, 'Name is required')
+    .min(2, 'Name must be at least 2 characters'),
+  username: z.string()
+    .min(1, 'Username is required')
+    .min(3, 'Username must be at least 3 characters'),
+  email: z.string()
+    .email('Invalid email address')
+    .optional()
+    .or(z.literal('')),
   password: z.string()
     .min(6, 'Password must be at least 6 characters')
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one uppercase letter, one lowercase letter, and one number'),
-  role: z.enum(['admin', 'student'], {
-    required_error: 'Please select a role',
-  }),
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+      'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+    ),
+  role: z.enum(['admin', 'student'])
+    .refine((val) => val === 'admin' || val === 'student', {
+      message: 'Please select a role'
+    }),
 })
 
 type RegisterFormData = z.infer<typeof registerSchema>
@@ -26,7 +38,7 @@ type RegisterFormData = z.infer<typeof registerSchema>
 export function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false)
   const { register: registerUser, isLoading } = useAuth()
-  const { toast } = useToast()
+  const toast = useToast()
   const router = useRouter()
 
   const {
@@ -56,11 +68,28 @@ export function RegisterForm() {
 
   const watchedPassword = watch('password')
 
+  // Password strength calculation
+  const getPasswordStrength = (password: string) => {
+    if (!password) return { strength: 0, label: '' }
+    
+    let strength = 0
+    if (password.length >= 6) strength += 1
+    if (/[a-z]/.test(password)) strength += 1
+    if (/[A-Z]/.test(password)) strength += 1
+    if (/\d/.test(password)) strength += 1
+    if (/[^a-zA-Z\d]/.test(password)) strength += 1
+    
+    const labels = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong']
+    return { strength, label: labels[strength - 1] || '' }
+  }
+
+  const passwordStrength = watchedPassword ? getPasswordStrength(watchedPassword) : { strength: 0, label: '' }
+
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="glass dark:glass-dark rounded-3xl p-8 shadow-2xl">
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent">
+          <h2 className="text-3xl font-bold bg-linear-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent">
             Create Account
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
@@ -194,29 +223,36 @@ export function RegisterForm() {
             {/* Password Strength Indicator */}
             {watchedPassword && (
               <div className="mt-2">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    Password strength:
+                  </span>
+                  <span className={`text-xs font-medium ${
+                    passwordStrength.strength <= 2 ? 'text-red-500' :
+                    passwordStrength.strength === 3 ? 'text-yellow-500' :
+                    'text-green-500'
+                  }`}>
+                    {passwordStrength.label}
+                  </span>
+                </div>
                 <div className="flex space-x-1">
-                  {[1, 2, 3, 4].map((level) => (
+                  {[1, 2, 3, 4, 5].map((level) => (
                     <div
                       key={level}
-                      className={`h-1 flex-1 rounded-full ${
-                        watchedPassword.length >= level * 2
+                      className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                        level <= passwordStrength.strength
                           ? level <= 2
                             ? 'bg-red-400'
-                            : level === 3
+                            : level <= 3
                             ? 'bg-yellow-400'
+                            : level <= 4
+                            ? 'bg-blue-400'
                             : 'bg-green-400'
                           : 'bg-gray-200 dark:bg-gray-700'
                       }`}
                     />
                   ))}
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {watchedPassword.length < 6
-                    ? 'Too short'
-                    : !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(watchedPassword)
-                    ? 'Needs uppercase, lowercase, and number'
-                    : 'Strong password'}
-                </p>
               </div>
             )}
           </div>
@@ -225,7 +261,7 @@ export function RegisterForm() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 px-4 bg-gradient-to-r from-primary-600 to-purple-600 hover:from-primary-700 hover:to-purple-700 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none flex items-center justify-center space-x-2"
+            className="w-full py-3 px-4 bg-linear-to-r from-primary-600 to-purple-600 hover:from-primary-700 hover:to-purple-700 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none flex items-center justify-center space-x-2"
           >
             {isLoading ? (
               <>

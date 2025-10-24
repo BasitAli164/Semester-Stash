@@ -19,7 +19,7 @@ type LoginFormData = z.infer<typeof loginSchema>
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const { login, isLoading } = useAuth()
-  const { toast } = useToast()
+  const toast = useToast() // Fixed: use the returned object directly
   const router = useRouter()
 
   const {

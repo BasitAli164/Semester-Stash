@@ -1,110 +1,115 @@
 'use client'
 
-import { useAuth } from '@/hooks/use-auth'
-import { useUIStore } from '@/lib/store'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { 
   LayoutDashboard, 
   Users, 
   Calendar, 
-  User, 
+  UserCheck, 
   Camera,
   BarChart3,
+  Settings,
   X
 } from 'lucide-react'
+import { useUIStore } from '@/lib/store'
+import { useAuth } from '@/hooks/use-auth'
 
-const adminRoutes = [
-  { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/admin/users', label: 'User Management', icon: Users },
-  { href: '/admin/attendance', label: 'Attendance Reports', icon: Calendar },
-  { href: '/admin/face-registration', label: 'Face Registration', icon: Camera },
+const adminNavigation = [
+  { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
+  { name: 'User Management', href: '/admin/users', icon: Users },
+  { name: 'Attendance Reports', href: '/admin/attendance', icon: Calendar },
+  { name: 'Face Registration', href: '/admin/face-registration', icon: Camera },
+  { name: 'Statistics', href: '/admin/statistics', icon: BarChart3 },
 ]
 
-const studentRoutes = [
-  { href: '/student/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/student/attendance', label: 'My Attendance', icon: Calendar },
-  { href: '/student/profile', label: 'Profile', icon: User },
+const studentNavigation = [
+  { name: 'Dashboard', href: '/student/dashboard', icon: LayoutDashboard },
+  { name: 'Mark Attendance', href: '/student/attendance', icon: UserCheck },
+  { name: 'Attendance History', href: '/student/history', icon: Calendar },
+  { name: 'Profile', href: '/student/profile', icon: Settings },
 ]
 
-export function DashboardSidebar() {
-  const { user, isAdmin } = useAuth()
-  const { sidebarOpen, setSidebarOpen } = useUIStore()
+export function Sidebar() {
   const pathname = usePathname()
+  const { sidebarOpen, setSidebarOpen } = useUIStore()
+  const { isAdmin } = useAuth()
 
-  const routes = isAdmin ? adminRoutes : studentRoutes
-
-  const isActive = (href: string) => {
-    return pathname === href || pathname.startsWith(href + '/')
-  }
+  const navigation = isAdmin ? adminNavigation : studentNavigation
 
   return (
     <>
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-gray-600 bg-opacity-75 lg:hidden z-40"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
-      <aside className={`
-        fixed top-0 left-0 z-50 w-64 h-screen bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-transform duration-300 ease-in-out
+      <div className={`
+        fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-xl transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:translate-x-0 lg:static lg:inset-0
       `}>
-        {/* Sidebar header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-              <BarChart3 className="h-5 w-5 text-white" />
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent">
-              FaceAttend
-            </span>
-          </div>
+        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            {isAdmin ? 'Admin Panel' : 'Student Portal'}
+          </h2>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 lg:hidden"
+            className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Navigation */}
-        <nav className="p-4">
-          <div className="space-y-2">
-            {routes.map((route) => (
+        <nav className="mt-8 px-4 space-y-2">
+          {navigation.map((item) => {
+            const isActive = pathname === item.href
+            return (
               <Link
-                key={route.href}
-                href={route.href}
-                onClick={() => setSidebarOpen(false)}
+                key={item.name}
+                href={item.href}
                 className={`
-                  flex items-center space-x-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200
-                  ${isActive(route.href)
-                    ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  group flex items-center px-3 py-3 text-sm font-medium rounded-2xl transition-all duration-200
+                  ${isActive
+                    ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700'
                   }
                 `}
+                onClick={() => setSidebarOpen(false)}
               >
-                <route.icon className="h-5 w-5" />
-                <span>{route.label}</span>
+                <item.icon className={`
+                  mr-3 h-5 w-5 flex-shrink-0
+                  ${isActive 
+                    ? 'text-primary-500' 
+                    : 'text-gray-400 group-hover:text-gray-500'
+                  }
+                `} />
+                {item.name}
               </Link>
-            ))}
-          </div>
-
-          {/* User info */}
-          <div className="absolute bottom-4 left-4 right-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl">
-            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-              {user?.name}
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
-              {user?.role}
-            </p>
-          </div>
+            )
+          })}
         </nav>
-      </aside>
+
+        {/* User info at bottom */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center">
+              <Users className="h-5 w-5 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                {isAdmin ? 'Administrator' : 'Student'}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                {isAdmin ? 'Full access' : 'Limited access'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
     </>
   )
 }
