@@ -319,12 +319,9 @@ export default function AttendanceHistoryPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {attendanceHistory.map((record, index) => (
+                      {attendanceHistory.map((record) => (
                         <tr
-                          key={
-                            record.id ||
-                            `${record.student_id}-${record.timestamp}-${index}`
-                          }
+                          key={record.id} // Now we can safely use record.id since it's always included
                           className="border-b border-gray-100 hover:bg-gray-50"
                         >
                           <td className="py-3 px-4">

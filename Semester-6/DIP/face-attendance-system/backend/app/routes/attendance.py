@@ -14,7 +14,24 @@ def get_today_attendance():
         conn = db_service.get_connection()
         cursor = conn.cursor()
         
-        records = Attendance.get_today_attendance(cursor)
+        # Include ID in the query
+        cursor.execute('''
+            SELECT id, name, student_id, class, timestamp, status
+            FROM attendance 
+            WHERE DATE(timestamp) = DATE('now')
+            ORDER BY timestamp DESC
+        ''')
+        records = []
+        for row in cursor.fetchall():
+            attendance = Attendance(
+                id=row[0],  # Include ID
+                name=row[1],
+                student_id=row[2],
+                class_name=row[3],
+                timestamp=row[4],
+                status=row[5]
+            )
+            records.append(attendance)
         conn.close()
         
         return jsonify({
@@ -68,9 +85,9 @@ def get_attendance_history():
         conn = db_service.get_connection()
         cursor = conn.cursor()
         
-        # Build query based on filters
+        # Build query based on filters - INCLUDE ID
         query = '''
-            SELECT name, student_id, class, timestamp, status
+            SELECT id, name, student_id, class, timestamp, status
             FROM attendance 
             WHERE 1=1
         '''
@@ -102,11 +119,12 @@ def get_attendance_history():
         records = []
         for row in cursor.fetchall():
             attendance = Attendance(
-                name=row[0],
-                student_id=row[1],
-                class_name=row[2],
-                timestamp=row[3],
-                status=row[4]
+                id=row[0],  # Include ID
+                name=row[1],
+                student_id=row[2],
+                class_name=row[3],
+                timestamp=row[4],
+                status=row[5]
             )
             records.append(attendance)
         
@@ -141,7 +159,24 @@ def get_attendance_by_range():
         conn = db_service.get_connection()
         cursor = conn.cursor()
         
-        records = Attendance.get_attendance_by_date_range(cursor, start_date, end_date)
+        # Include ID in the query
+        cursor.execute('''
+            SELECT id, name, student_id, class, timestamp, status
+            FROM attendance 
+            WHERE DATE(timestamp) BETWEEN ? AND ?
+            ORDER BY timestamp DESC
+        ''', (start_date, end_date))
+        records = []
+        for row in cursor.fetchall():
+            attendance = Attendance(
+                id=row[0],  # Include ID
+                name=row[1],
+                student_id=row[2],
+                class_name=row[3],
+                timestamp=row[4],
+                status=row[5]
+            )
+            records.append(attendance)
         conn.close()
         
         return jsonify({
@@ -164,16 +199,23 @@ def get_student_attendance(student_id):
         conn = db_service.get_connection()
         cursor = conn.cursor()
         
-        records = Attendance.get_student_attendance(cursor, student_id, days)
-        conn.close()
+        # Include ID in the query
+        cursor.execute('''
+            SELECT id, timestamp, status
+            FROM attendance 
+            WHERE student_id = ? AND DATE(timestamp) >= DATE('now', '-' || ? || ' days')
+            ORDER BY timestamp DESC
+        ''', (student_id, days))
         
-        # Convert to list of dictionaries for JSON serialization
         attendance_list = []
-        for row in records:
+        for row in cursor.fetchall():
             attendance_list.append({
-                'timestamp': row[0],
-                'status': row[1]
+                'id': row[0],  # Include ID
+                'timestamp': row[1],
+                'status': row[2]
             })
+        
+        conn.close()
         
         return jsonify({
             'student_id': student_id,

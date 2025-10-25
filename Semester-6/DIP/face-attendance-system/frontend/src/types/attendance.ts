@@ -1,5 +1,5 @@
 export interface AttendanceRecord {
-  id?: number;
+  id: number;  // Make id required
   student_id: string;
   name: string;
   class: string;
@@ -46,4 +46,15 @@ export interface AttendanceStatsResponse {
     start_date?: string;
     end_date?: string;
   };
+}
+
+export interface StudentAttendanceResponse {
+  student_id: string;
+  attendance: Array<{
+    id: number;
+    timestamp: string;
+    status: string;
+  }>;
+  days: number;
+  count: number;
 }
