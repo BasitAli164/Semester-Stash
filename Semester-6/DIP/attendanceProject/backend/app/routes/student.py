@@ -1,283 +1,270 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required
 from app import db
 from app.models.user import User
-from app.models.attendance import Attendance, AttendanceStatus
-from app.utils.decorators import student_required
-from datetime import datetime, date, timedelta
+from app.services.face_service import FaceRecognitionService
+from app.utils.file_handlers import FileHandler
 import logging
 
 logger = logging.getLogger(__name__)
 
 student_bp = Blueprint('student', __name__)
 
-@student_bp.route('/profile', methods=['GET'])
+@student_bp.route('/register', methods=['POST'])
 @jwt_required()
-@student_required
-def get_student_profile(current_user):
-    """Get student profile (Student only)"""
+def register_student():
+    """Register new student with face images"""
     try:
-        return jsonify({
-            'message': 'Profile retrieved successfully',
-            'user': current_user.to_dict()
-        }), 200
+        # Get form data
+        name = request.form.get('name')
+        username = request.form.get('username')
+        password = request.form.get('password')
+        email = request.form.get('email')
+        student_id = request.form.get('student_id')
         
-    except Exception as e:
-        logger.error(f"Error getting student profile: {str(e)}")
-        return jsonify({
-            'message': 'Failed to retrieve profile',
-            'error': str(e)
-        }), 500
-
-@student_bp.route('/profile', methods=['PUT'])
-@jwt_required()
-@student_required
-def update_student_profile(current_user):
-    """Update student profile (Student only)"""
-    try:
-        data = request.get_json()
-        
-        allowed_fields = ['name', 'email']
-        updated_fields = []
-        
-        for field in allowed_fields:
-            if field in data and data[field] is not None:
-                setattr(current_user, field, data[field])
-                updated_fields.append(field)
-        
-        if updated_fields:
-            current_user.updated_at = datetime.utcnow()
-            db.session.commit()
-            
+        # Validate required fields
+        if not all([name, username, password]):
             return jsonify({
-                'message': f'Profile updated successfully. Updated fields: {", ".join(updated_fields)}',
-                'user': current_user.to_dict()
-            }), 200
-        else:
-            return jsonify({
-                'message': 'No valid fields to update',
-                'error': 'no_updates'
+                'message': 'Name, username, and password are required',
+                'error': 'missing_fields'
             }), 400
-            
+        
+        # Check if username already exists
+        if User.query.filter_by(username=username).first():
+            return jsonify({
+                'message': 'Username already exists',
+                'error': 'username_exists'
+            }), 400
+        
+        # Check if student_id already exists
+        if student_id and User.query.filter_by(student_id=student_id).first():
+            return jsonify({
+                'message': 'Student ID already exists',
+                'error': 'student_id_exists'
+            }), 400
+        
+        # Create new student
+        student = User(
+            name=name,
+            username=username,
+            email=email,
+            student_id=student_id
+        )
+        student.password = password
+        
+        db.session.add(student)
+        db.session.commit()
+        
+        # Handle face image uploads for registration
+        uploaded_files = request.files.getlist('images')
+        saved_paths = []
+        
+        for file in uploaded_files:
+            if file and FileHandler.allowed_file(file.filename):
+                saved_path = FileHandler.save_uploaded_file(file, student.id, 'training')
+                if saved_path:
+                    saved_paths.append(saved_path)
+        
+        # Register faces if images provided
+        face_registration_success = False
+        face_message = "No images provided for face registration"
+        
+        if saved_paths:
+            face_service = FaceRecognitionService()
+            success, message = face_service.register_user_faces(student.id, saved_paths)
+            face_registration_success = success
+            face_message = message
+        
+        return jsonify({
+            'message': 'Student registered successfully',
+            'student': student.to_dict(),
+            'face_registration': {
+                'success': face_registration_success,
+                'message': face_message,
+                'images_processed': len(saved_paths)
+            }
+        }), 201
+        
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Error updating student profile: {str(e)}")
+        logger.error(f"Error registering student: {str(e)}")
         return jsonify({
-            'message': 'Failed to update profile',
+            'message': 'Failed to register student',
             'error': str(e)
         }), 500
 
-@student_bp.route('/attendance/today', methods=['GET'])
+@student_bp.route('/list', methods=['GET'])
 @jwt_required()
-@student_required
-def get_today_attendance(current_user):
-    """Get today's attendance status for student"""
-    try:
-        today = date.today()
-        attendance = Attendance.query.filter_by(
-            user_id=current_user.id, 
-            date=today
-        ).first()
-        
-        attendance_data = attendance.to_dict() if attendance else None
-        
-        return jsonify({
-            'message': 'Today\'s attendance retrieved successfully',
-            'attendance': attendance_data,
-            'date': today.isoformat()
-        }), 200
-        
-    except Exception as e:
-        logger.error(f"Error getting today's attendance: {str(e)}")
-        return jsonify({
-            'message': 'Failed to retrieve attendance',
-            'error': str(e)
-        }), 500
-
-@student_bp.route('/attendance/history', methods=['GET'])
-@jwt_required()
-@student_required
-def get_attendance_history(current_user):
-    """Get attendance history for student with pagination"""
+def get_all_students():
+    """Get all students with pagination"""
     try:
         page = request.args.get('page', 1, type=int)
-        per_page = request.args.get('per_page', 30, type=int)
-        start_date = request.args.get('start_date')
-        end_date = request.args.get('end_date')
+        per_page = request.args.get('per_page', 10, type=int)
+        search = request.args.get('search', '')
         
-        query = Attendance.query.filter_by(user_id=current_user.id)
+        query = User.query
         
-        # Date filtering
-        if start_date:
-            try:
-                start_date_obj = datetime.strptime(start_date, '%Y-%m-%d').date()
-                query = query.filter(Attendance.date >= start_date_obj)
-            except ValueError:
-                return jsonify({
-                    'message': 'Invalid start date format. Use YYYY-MM-DD',
-                    'error': 'invalid_date_format'
-                }), 400
+        if search:
+            query = query.filter(
+                db.or_(
+                    User.name.ilike(f'%{search}%'),
+                    User.username.ilike(f'%{search}%'),
+                    User.student_id.ilike(f'%{search}%')
+                )
+            )
         
-        if end_date:
-            try:
-                end_date_obj = datetime.strptime(end_date, '%Y-%m-%d').date()
-                query = query.filter(Attendance.date <= end_date_obj)
-            except ValueError:
-                return jsonify({
-                    'message': 'Invalid end date format. Use YYYY-MM-DD',
-                    'error': 'invalid_date_format'
-                }), 400
-        
-        # Order by date descending
-        attendance_pagination = query.order_by(Attendance.date.desc()).paginate(
+        students_pagination = query.order_by(User.created_at.desc()).paginate(
             page=page, per_page=per_page, error_out=False
         )
         
-        attendance_data = {
-            'attendance': [attendance.to_dict() for attendance in attendance_pagination.items],
-            'total': attendance_pagination.total,
-            'pages': attendance_pagination.pages,
-            'current_page': page,
-            'per_page': per_page
+        students_data = {
+            'students': [student.to_dict() for student in students_pagination.items],
+            'total': students_pagination.total,
+            'pages': students_pagination.pages,
+            'current_page': page
         }
         
         return jsonify({
-            'message': 'Attendance history retrieved successfully',
-            'data': attendance_data
+            'message': 'Students retrieved successfully',
+            'data': students_data
         }), 200
         
     except Exception as e:
-        logger.error(f"Error getting attendance history: {str(e)}")
+        logger.error(f"Error getting students: {str(e)}")
         return jsonify({
-            'message': 'Failed to retrieve attendance history',
+            'message': 'Failed to retrieve students',
             'error': str(e)
         }), 500
 
-@student_bp.route('/attendance/stats', methods=['GET'])
+@student_bp.route('/<int:student_id>', methods=['GET'])
 @jwt_required()
-@student_required
-def get_attendance_stats(current_user):
-    """Get attendance statistics for student"""
+def get_student(student_id):
+    """Get specific student details"""
     try:
-        # Get current month dates
-        today = date.today()
-        first_day_of_month = today.replace(day=1)
+        student = User.query.get(student_id)
+        if not student:
+            return jsonify({
+                'message': 'Student not found',
+                'error': 'student_not_found'
+            }), 404
         
-        # Calculate statistics
-        total_days = (today - first_day_of_month).days + 1
-        present_days = Attendance.query.filter(
-            Attendance.user_id == current_user.id,
-            Attendance.date >= first_day_of_month,
-            Attendance.date <= today,
-            Attendance.status == AttendanceStatus.PRESENT
-        ).count()
+        return jsonify({
+            'message': 'Student retrieved successfully',
+            'student': student.to_dict()
+        }), 200
         
-        absent_days = Attendance.query.filter(
-            Attendance.user_id == current_user.id,
-            Attendance.date >= first_day_of_month,
-            Attendance.date <= today,
-            Attendance.status == AttendanceStatus.ABSENT
-        ).count()
+    except Exception as e:
+        logger.error(f"Error getting student: {str(e)}")
+        return jsonify({
+            'message': 'Failed to retrieve student',
+            'error': str(e)
+        }), 500
+
+@student_bp.route('/<int:student_id>/toggle-active', methods=['PUT'])
+@jwt_required()
+def toggle_student_active(student_id):
+    """Toggle student active status"""
+    try:
+        student = User.query.get(student_id)
+        if not student:
+            return jsonify({
+                'message': 'Student not found',
+                'error': 'student_not_found'
+            }), 404
         
-        attendance_rate = (present_days / total_days * 100) if total_days > 0 else 0
+        student.is_active = not student.is_active
+        db.session.commit()
         
-        # Get recent attendance streak
-        recent_attendance = Attendance.query.filter(
-            Attendance.user_id == current_user.id,
-            Attendance.date <= today
-        ).order_by(Attendance.date.desc()).limit(7).all()
+        action = "activated" if student.is_active else "deactivated"
         
-        current_streak = 0
-        for att in recent_attendance:
-            if att.status == AttendanceStatus.PRESENT:
-                current_streak += 1
-            else:
-                break
+        return jsonify({
+            'message': f'Student {action} successfully',
+            'student': student.to_dict()
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error updating student status: {str(e)}")
+        return jsonify({
+            'message': 'Failed to update student status',
+            'error': str(e)
+        }), 500
+
+@student_bp.route('/<int:student_id>/add-faces', methods=['POST'])
+@jwt_required()
+def add_student_faces(student_id):
+    """Add more face images for a student"""
+    try:
+        student = User.query.get(student_id)
+        if not student:
+            return jsonify({
+                'message': 'Student not found',
+                'error': 'student_not_found'
+            }), 404
+        
+        # Handle file uploads
+        uploaded_files = request.files.getlist('images')
+        saved_paths = []
+        
+        for file in uploaded_files:
+            if file and FileHandler.allowed_file(file.filename):
+                saved_path = FileHandler.save_uploaded_file(file, student.id, 'training')
+                if saved_path:
+                    saved_paths.append(saved_path)
+        
+        if not saved_paths:
+            return jsonify({
+                'message': 'No valid images provided',
+                'error': 'no_valid_images'
+            }), 400
+        
+        # Register faces
+        face_service = FaceRecognitionService()
+        success, message = face_service.register_user_faces(student.id, saved_paths)
+        
+        if success:
+            return jsonify({
+                'message': message,
+                'images_processed': len(saved_paths),
+                'total_embeddings': face_service.get_user_embedding_count(student.id)
+            }), 200
+        else:
+            return jsonify({
+                'message': message,
+                'error': 'face_registration_failed'
+            }), 400
+            
+    except Exception as e:
+        logger.error(f"Error adding student faces: {str(e)}")
+        return jsonify({
+            'message': 'Failed to add face images',
+            'error': str(e)
+        }), 500
+
+@student_bp.route('/stats', methods=['GET'])
+@jwt_required()
+def get_student_stats():
+    """Get student statistics"""
+    try:
+        total_students = User.query.count()
+        active_students = User.query.filter_by(is_active=True).count()
+        students_with_faces = db.session.query(User).join(User.embeddings).distinct().count()
         
         stats = {
-            'current_month': {
-                'total_days': total_days,
-                'present_days': present_days,
-                'absent_days': absent_days,
-                'attendance_rate': round(attendance_rate, 2)
-            },
-            'current_streak': current_streak,
-            'total_attendance': Attendance.query.filter_by(user_id=current_user.id).count()
+            'total_students': total_students,
+            'active_students': active_students,
+            'students_with_faces': students_with_faces,
+            'students_without_faces': total_students - students_with_faces
         }
         
         return jsonify({
-            'message': 'Attendance statistics retrieved successfully',
+            'message': 'Student statistics retrieved successfully',
             'data': stats
         }), 200
         
     except Exception as e:
-        logger.error(f"Error getting attendance stats: {str(e)}")
+        logger.error(f"Error getting student stats: {str(e)}")
         return jsonify({
-            'message': 'Failed to retrieve attendance statistics',
+            'message': 'Failed to retrieve student statistics',
             'error': str(e)
         }), 500
-
-@student_bp.route('/dashboard', methods=['GET'])
-@jwt_required()
-@student_required
-def get_student_dashboard(current_user):
-    """Get student dashboard data"""
-    try:
-        today = date.today()
-        
-        # Today's attendance
-        today_attendance = Attendance.query.filter_by(
-            user_id=current_user.id, 
-            date=today
-        ).first()
-        
-        # Recent attendance (last 5 days)
-        recent_attendance = Attendance.query.filter(
-            Attendance.user_id == current_user.id,
-            Attendance.date <= today
-        ).order_by(Attendance.date.desc()).limit(5).all()
-        
-        # Monthly stats
-        first_day_of_month = today.replace(day=1)
-        present_days_month = Attendance.query.filter(
-            Attendance.user_id == current_user.id,
-            Attendance.date >= first_day_of_month,
-            Attendance.date <= today,
-            Attendance.status == AttendanceStatus.PRESENT
-        ).count()
-        
-        total_days_month = (today - first_day_of_month).days + 1
-        monthly_rate = (present_days_month / total_days_month * 100) if total_days_month > 0 else 0
-        
-        dashboard_data = {
-            'today_attendance': today_attendance.to_dict() if today_attendance else None,
-            'recent_attendance': [att.to_dict() for att in recent_attendance],
-            'monthly_stats': {
-                'present_days': present_days_month,
-                'total_days': total_days_month,
-                'attendance_rate': round(monthly_rate, 2)
-            },
-            'user': current_user.to_dict()
-        }
-        
-        return jsonify({
-            'message': 'Dashboard data retrieved successfully',
-            'data': dashboard_data
-        }), 200
-        
-    except Exception as e:
-        logger.error(f"Error getting student dashboard: {str(e)}")
-        return jsonify({
-            'message': 'Failed to retrieve dashboard data',
-            'error': str(e)
-        }), 500
-
-@student_bp.route('/test', methods=['GET'])
-@jwt_required()
-@student_required
-def test_student_routes(current_user):
-    """Test endpoint for student routes"""
-    return jsonify({
-        'message': 'Student routes are working',
-        'user': current_user.to_dict()
-    }), 200

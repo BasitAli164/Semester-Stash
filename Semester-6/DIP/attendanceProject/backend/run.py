@@ -22,9 +22,9 @@ def test_all():
         'message': 'All systems working!', 
         'endpoints': {
             'auth': '/api/auth/*',
-            'admin': '/api/admin/*', 
             'student': '/api/student/*',
-            'attendance': '/api/attendance/*'
+            'attendance': '/api/attendance/*',
+            'face': '/api/face/*'
         }
     }
 

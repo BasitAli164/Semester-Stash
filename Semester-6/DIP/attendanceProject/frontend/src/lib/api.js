@@ -1,115 +1,65 @@
-// lib/api.js
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+import axios from 'axios'
 
-class ApiService {
-  constructor() {
-    this.baseUrl = API_BASE_URL;
-  }
+const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:5000/api'
 
-  async request(endpoint, options = {}) {
-    const url = `${this.baseUrl}${endpoint}`;
-    const config = {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-      ...options,
-    };
+export const api = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 30000,
+})
 
-    // Add auth token if available
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('auth_token');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
+// Request interceptor to add auth token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('auth_token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
     }
+    return config
+  },
+  (error) => {
+    return Promise.reject(error)
+  }
+)
 
-    try {
-      const response = await fetch(url, config);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'API request failed');
-      }
-
-      return data;
-    } catch (error) {
-      console.error('API request failed:', error);
-      throw error;
+// Response interceptor to handle errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('auth_token')
+      window.location.href = '/login'
     }
+    return Promise.reject(error)
   }
+)
 
-  // Auth endpoints
-  async login(credentials) {
-    return this.request('/api/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(credentials),
-    });
-  }
-
-  async register(userData) {
-    return this.request('/api/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(userData),
-    });
-  }
-
-  async getProfile() {
-    return this.request('/api/auth/profile');
-  }
-
-  // Attendance endpoints
-  async markAttendance(imageData = null) {
-    const payload = imageData ? { image_data: imageData } : {};
-    return this.request('/api/attendance/mark', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
-  }
-
-  async getTodayAttendance() {
-    return this.request('/api/attendance/today');
-  }
-
-  async getAttendanceHistory(params = {}) {
-    const queryParams = new URLSearchParams(params).toString();
-    return this.request(`/api/attendance/history?${queryParams}`);
-  }
-
-  async getAttendanceStats() {
-    return this.request('/api/attendance/stats');
-  }
-
-  // Face recognition endpoints
-  async registerFaces(userId, images) {
-    const formData = new FormData();
-    images.forEach((image) => {
-      formData.append('images', image);
-    });
-    formData.append('user_id', userId);
-
-    return this.request('/api/face/register', {
-      method: 'POST',
-      body: formData,
-      headers: {
-        // Let browser set Content-Type for FormData
-      },
-    });
-  }
-
-  async verifyFace(imageData) {
-    return this.request('/api/face/verify', {
-      method: 'POST',
-      body: JSON.stringify({ image_data: imageData }),
-    });
-  }
-
-  async recognizeFace(imageData) {
-    return this.request('/api/face/recognize', {
-      method: 'POST',
-      body: JSON.stringify({ image_data: imageData }),
-    });
-  }
+// API endpoints
+export const authAPI = {
+  login: (credentials) => api.post('/auth/login', credentials),
+  verifyToken: () => api.get('/auth/verify-token'),
 }
 
-export const apiService = new ApiService();
+export const studentAPI = {
+  register: (formData) => api.post('/student/register', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  getAll: (params) => api.get('/student/list', { params }),
+  getById: (id) => api.get(`/student/${id}`),
+  toggleActive: (id) => api.put(`/student/${id}/toggle-active`),
+  addFaces: (id, formData) => api.post(`/student/${id}/add-faces`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  getStats: () => api.get('/student/stats'),
+}
+
+export const attendanceAPI = {
+  mark: (data) => api.post('/attendance/mark', data),
+  markManual: (data) => api.post('/attendance/manual', data),
+  getReports: (params) => api.get('/attendance/reports', { params }),
+  getStats: () => api.get('/attendance/stats'),
+  getToday: () => api.get('/attendance/today'),
+}
+
+export const faceAPI = {
+  verify: (data) => api.post('/face/verify', data),
+}

@@ -43,9 +43,7 @@ def create_app(config_class='default'):
     from app.utils.error_handlers import register_error_handlers
     register_error_handlers(app)
     
-    # JWT configuration and callbacks
-    from app.models.user import User
-    
+    # JWT configuration
     @jwt.user_identity_loader
     def user_identity_lookup(user):
         return user.id
@@ -53,14 +51,17 @@ def create_app(config_class='default'):
     @jwt.user_lookup_loader
     def user_lookup_callback(_jwt_header, jwt_data):
         identity = jwt_data["sub"]
-        return User.query.get(identity)
+        # For admin system, we don't have a User model for admin
+        return type('Obj', (object,), {'id': identity, 'username': 'admin'})()
     
     # Register all blueprints
     from app.routes.auth import auth_bp
+    from app.routes.student import student_bp
     from app.routes.face_recognition import face_bp
     from app.routes.attendance import attendance_bp
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    app.register_blueprint(student_bp, url_prefix='/api/student')
     app.register_blueprint(face_bp, url_prefix='/api/face')
     app.register_blueprint(attendance_bp, url_prefix='/api/attendance')
     

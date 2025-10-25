@@ -2,7 +2,7 @@ from app import db, bcrypt
 from datetime import datetime
 
 class User(db.Model):
-    """User model for storing user account"""
+    """User model for storing student accounts"""
     __tablename__ = 'users'
     
     id = db.Column(db.Integer, primary_key=True)
@@ -10,6 +10,7 @@ class User(db.Model):
     username = db.Column(db.String(50), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(128), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=True)
+    student_id = db.Column(db.String(20), unique=True, nullable=True)  # Student ID number
     image_dir = db.Column(db.String(255), nullable=True)
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -40,10 +41,13 @@ class User(db.Model):
             'name': self.name,
             'username': self.username,
             'email': self.email,
+            'student_id': self.student_id,
             'image_dir': self.image_dir,
             'is_active': self.is_active,
             'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+            'embedding_count': len(self.embeddings),
+            'attendance_count': len(self.attendance_records)
         }
     
     def __repr__(self):

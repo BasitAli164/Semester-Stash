@@ -1,20 +1,18 @@
-// app/layout.js
-import { Inter } from 'next/font/google';
-import './globals.css';
+'use client'
+import { Inter } from 'next/font/google'
+import './globals.css'
+import { AuthProvider } from '../lib/auth'
 
-const inter = Inter({ subsets: ['latin'] });
-
-export const metadata = {
-  title: 'Facial Attendance System',
-  description: 'Next.js frontend for Facial Attendance System',
-};
+const inter = Inter({ subsets: ['latin'] })
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        {children}
+    <html lang="en" className="dark">
+      <body className={`${inter.className} bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100`}>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
-  );
+  )
 }
