@@ -50,9 +50,9 @@ class Attendance:
     
     @staticmethod
     def get_today_attendance(cursor):
-        """Get today's attendance records"""
+        """Get today's attendance records - INCLUDE ID"""
         cursor.execute('''
-            SELECT name, student_id, class, timestamp, status
+            SELECT id, name, student_id, class, timestamp, status
             FROM attendance 
             WHERE DATE(timestamp) = DATE('now')
             ORDER BY timestamp DESC
@@ -60,20 +60,21 @@ class Attendance:
         records = []
         for row in cursor.fetchall():
             attendance = Attendance(
-                name=row[0],
-                student_id=row[1],
-                class_name=row[2],
-                timestamp=row[3],
-                status=row[4]
+                id=row[0],
+                name=row[1],
+                student_id=row[2],
+                class_name=row[3],
+                timestamp=row[4],
+                status=row[5]
             )
             records.append(attendance)
         return records
     
     @staticmethod
     def get_attendance_by_date_range(cursor, start_date, end_date):
-        """Get attendance records for date range"""
+        """Get attendance records for date range - INCLUDE ID"""
         cursor.execute('''
-            SELECT name, student_id, class, timestamp, status
+            SELECT id, name, student_id, class, timestamp, status
             FROM attendance 
             WHERE DATE(timestamp) BETWEEN ? AND ?
             ORDER BY timestamp DESC
@@ -81,20 +82,21 @@ class Attendance:
         records = []
         for row in cursor.fetchall():
             attendance = Attendance(
-                name=row[0],
-                student_id=row[1],
-                class_name=row[2],
-                timestamp=row[3],
-                status=row[4]
+                id=row[0],
+                name=row[1],
+                student_id=row[2],
+                class_name=row[3],
+                timestamp=row[4],
+                status=row[5]
             )
             records.append(attendance)
         return records
     
     @staticmethod
     def get_student_attendance(cursor, student_id, days=30):
-        """Get attendance history for a specific student"""
+        """Get attendance history for a specific student - INCLUDE ID"""
         cursor.execute('''
-            SELECT timestamp, status
+            SELECT id, timestamp, status
             FROM attendance 
             WHERE student_id = ? AND DATE(timestamp) >= DATE('now', '-' || ? || ' days')
             ORDER BY timestamp DESC
@@ -102,20 +104,12 @@ class Attendance:
         return cursor.fetchall()
     
     def to_dict(self):
-        """Convert to dictionary"""
-        # Handle datetime conversion safely
-        timestamp = None
-        if self.timestamp:
-            if isinstance(self.timestamp, datetime):
-                timestamp = self.timestamp.isoformat()
-            else:
-                timestamp = self.timestamp
-        
+        """Convert to dictionary - ensure ID is included"""
         return {
             'id': self.id,
             'student_id': self.student_id,
             'name': self.name,
             'class': self.class_name,
-            'timestamp': timestamp,
+            'timestamp': self.timestamp.isoformat() if isinstance(self.timestamp, datetime) else self.timestamp,
             'status': self.status
         }

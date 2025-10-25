@@ -7,8 +7,8 @@ export const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000,
   withCredentials: false,
+  timeout: 30000, // 30 seconds timeout
 });
 
 // Request interceptor to add auth token
@@ -16,18 +16,22 @@ apiClient.interceptors.request.use(
   (config) => {
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('auth_token');
-      console.log('🔐 Token from localStorage:', token ? 'Present' : 'Missing');
-      
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
-        console.log('✅ Authorization header set:', config.headers.Authorization);
-      } else {
-        console.log('❌ No token found in localStorage');
       }
     }
     
-    console.log(`🔄 API Call: ${config.method?.toUpperCase()} ${config.url}`);
-    console.log('📨 Request headers:', config.headers);
+    // Don't set Content-Type for FormData - let browser set it with boundary
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+    }
+    
+    console.log('🔄 API Request:', {
+      method: config.method?.toUpperCase(),
+      url: config.url,
+      headers: config.headers,
+    });
+    
     return config;
   },
   (error) => {
@@ -39,7 +43,11 @@ apiClient.interceptors.request.use(
 // Response interceptor to handle errors
 apiClient.interceptors.response.use(
   (response) => {
-    console.log(`✅ API Success: ${response.status} ${response.config.url}`);
+    console.log('✅ API Response:', {
+      status: response.status,
+      url: response.config.url,
+      data: response.data,
+    });
     return response;
   },
   (error) => {
@@ -47,16 +55,10 @@ apiClient.interceptors.response.use(
       url: error.config?.url,
       method: error.config?.method,
       status: error.response?.status,
+      data: error.response?.data,
       message: error.message,
-      responseData: error.response?.data,
-      requestHeaders: error.config?.headers
+      code: error.code,
     });
-    
-    if (error.response?.status === 401) {
-      console.error('🔐 401 Unauthorized - Token issue detected');
-      console.log('📋 Response headers:', error.response?.headers);
-      console.log('📋 Request headers that were sent:', error.config?.headers);
-    }
     
     if (error.code === 'NETWORK_ERROR' || error.message === 'Network Error') {
       console.error('🌐 Network Error: Backend might be down or CORS issue');

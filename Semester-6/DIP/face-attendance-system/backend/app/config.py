@@ -17,7 +17,7 @@ class Config:
     STUDENT_IMAGES_FOLDER = os.path.join(UPLOAD_FOLDER, 'student_images')
     TEMP_UPLOAD_FOLDER = os.path.join(UPLOAD_FOLDER, 'temp')
     
-    # Face recognition settings
+    # Face recognition settings - MAKE SURE THESE EXIST
     FACE_DETECTION_THRESHOLD = 0.9
     FACE_RECOGNITION_THRESHOLD = 0.8
     

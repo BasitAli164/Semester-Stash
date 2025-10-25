@@ -5,8 +5,29 @@ from flask import Blueprint, request, jsonify
 from app.utils.security import jwt_required
 from app.services.database_service import db_service
 from app.services.facenet_service import face_net_service
+from app.models.student import Student
+from app.config import Config
 
 recognition_bp = Blueprint('recognition', __name__)
+
+def convert_numpy_types(obj):
+    """
+    Recursively convert numpy data types to Python native types for JSON serialization
+    """
+    if isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.floating):
+        return float(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, dict):
+        return {key: convert_numpy_types(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_numpy_types(item) for item in obj]
+    elif isinstance(obj, tuple):
+        return tuple(convert_numpy_types(item) for item in obj)
+    else:
+        return obj
 
 @recognition_bp.route('/detect', methods=['POST'])
 @jwt_required
@@ -35,12 +56,18 @@ def detect_faces():
         # Process frame
         results = face_net_service.process_frame(frame, known_embeddings)
         
+        # Convert numpy types to Python native types for JSON serialization
+        serializable_results = convert_numpy_types(results)
+        
         return jsonify({
             'success': True,
-            'results': results
+            'results': serializable_results
         }), 200
         
     except Exception as e:
+        print(f"Face detection error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': f'Face detection failed: {str(e)}'}), 500
 
 @recognition_bp.route('/recognize', methods=['POST'])
@@ -66,12 +93,18 @@ def recognize_face():
         result = {
             'recognized': student_id is not None,
             'student_id': student_id,
-            'distance': distance,
-            'confidence': 1 - (distance / face_net_service.FACE_RECOGNITION_THRESHOLD) if student_id else 0
+            'distance': float(distance) if distance is not None else None,  # Convert to float
+            'confidence': float(1 - (distance / face_net_service.FACE_RECOGNITION_THRESHOLD)) if student_id else 0.0
         }
         
         if student_id:
-            result.update(known_embeddings[student_id])
+            # Convert known_embeddings data to serializable format
+            student_data = known_embeddings[student_id]
+            result.update({
+                'name': student_data['name'],
+                'class': student_data['class'],
+                # Don't include the embedding itself as it's too large
+            })
         
         return jsonify({
             'success': True,
@@ -79,6 +112,9 @@ def recognize_face():
         }), 200
         
     except Exception as e:
+        print(f"Face recognition error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': f'Face recognition failed: {str(e)}'}), 500
 
 @recognition_bp.route('/status', methods=['GET'])
@@ -100,15 +136,57 @@ def get_system_status():
         
         return jsonify({
             'status': 'operational',
-            'face_detection_threshold': face_net_service.FACE_DETECTION_THRESHOLD,
-            'face_recognition_threshold': face_net_service.FACE_RECOGNITION_THRESHOLD,
+            'face_detection_threshold': float(face_net_service.FACE_DETECTION_THRESHOLD),
+            'face_recognition_threshold': float(face_net_service.FACE_RECOGNITION_THRESHOLD),
             'students': {
-                'total': total_students,
-                'with_embeddings': students_with_embeddings,
-                'without_embeddings': total_students - students_with_embeddings
+                'total': int(total_students),
+                'with_embeddings': int(students_with_embeddings),
+                'without_embeddings': int(total_students - students_with_embeddings)
             },
             'device': str(face_net_service.device)
         }), 200
         
     except Exception as e:
+        print(f"System status error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': f'Failed to get system status: {str(e)}'}), 500
+
+@recognition_bp.route('/test', methods=['GET'])
+@jwt_required
+def test_recognition():
+    """Test endpoint to verify recognition system"""
+    try:
+        conn = db_service.get_connection()
+        cursor = conn.cursor()
+        
+        # Test database connection and Student model
+        cursor.execute('SELECT COUNT(*) FROM students')
+        total_students = cursor.fetchone()[0]
+        
+        cursor.execute('SELECT COUNT(*) FROM students WHERE face_embedding IS NOT NULL')
+        students_with_embeddings = cursor.fetchone()[0]
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Recognition system test',
+            'students': {
+                'total': int(total_students),
+                'with_embeddings': int(students_with_embeddings),
+                'without_embeddings': int(total_students - students_with_embeddings)
+            },
+            'system': {
+                'device': str(face_net_service.device),
+                'detection_threshold': float(face_net_service.FACE_DETECTION_THRESHOLD),
+                'recognition_threshold': float(face_net_service.FACE_RECOGNITION_THRESHOLD)
+            }
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Test failed: {str(e)}',
+            'traceback': str(e.__traceback__)
+        }), 500

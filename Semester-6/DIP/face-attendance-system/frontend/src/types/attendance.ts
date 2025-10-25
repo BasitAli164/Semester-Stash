@@ -12,6 +12,18 @@ export interface TodayAttendanceResponse {
   count: number;
 }
 
+export interface AttendanceHistoryResponse {
+  attendance: AttendanceRecord[];
+  count: number;
+  filters: {
+    start_date?: string;
+    end_date?: string;
+    student_id?: string;
+    class?: string;
+    status?: string;
+  };
+}
+
 export interface AttendanceStats {
   present: number;
   absent: number;
@@ -24,4 +36,14 @@ export interface MarkAttendanceData {
   name: string;
   class: string;
   status?: 'Present' | 'Absent' | 'Late';
+}
+
+export interface AttendanceStatsResponse {
+  stats: Record<string, number>;
+  percentages: Record<string, number>;
+  total: number;
+  date_range: {
+    start_date?: string;
+    end_date?: string;
+  };
 }
