@@ -2,54 +2,56 @@
 
 import { useRouter } from 'next/navigation';
 import { useStudents } from '@/hooks/use-students';
-import { StudentFormData } from '@/types/student';
+import { CreateStudentData } from '@/types/student';
 import { StudentForm } from '@/components/features/students/student-form';
-import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useState } from 'react';
 
 export default function RegisterStudentPage() {
   const router = useRouter();
-  const { registerStudent, isLoading, error } = useStudents();
+  const { createStudent, loading } = useStudents();
+  const [submitError, setSubmitError] = useState('');
 
-  const handleSubmit = async (formData: StudentFormData) => {
-    await registerStudent(formData);
-    // Redirect back to students list on success
-    router.push('/dashboard/students');
-  };
-
-  const handleCancel = () => {
-    router.push('/dashboard/students');
+  const handleSubmit = async (studentData: CreateStudentData) => {
+    try {
+      setSubmitError('');
+      await createStudent(studentData);
+      // Only redirect if successful
+      router.push('/dashboard/students');
+    } catch (err: any) {
+      setSubmitError(err.message || 'Failed to register student');
+      // Don't redirect on error
+    }
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Register New Student</h1>
-        <p className="text-gray-600">
-          Add a new student to the face recognition system
-        </p>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-6">
+          <Button
+            variant="outline"
+            onClick={() => router.push('/dashboard/students')}
+            className="mb-4"
+          >
+            ← Back to Students
+          </Button>
+          <h1 className="text-3xl font-bold text-gray-900">Register New Student</h1>
+          <p className="text-gray-600 mt-2">
+            Register a new student with face images for attendance tracking
+          </p>
+        </div>
+
+        {submitError && (
+          <div className="mb-6 p-4 text-sm text-red-700 bg-red-100 rounded-md">
+            {submitError}
+          </div>
+        )}
+
+        <StudentForm
+          onSubmit={handleSubmit}
+          loading={loading}
+        />
       </div>
-
-      {/* Error Alert */}
-      {error && (
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="p-4">
-            <div className="flex items-center">
-              <svg className="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className="text-red-700">{error}</span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Student Form */}
-      <StudentForm
-        onSubmit={handleSubmit}
-        onCancel={handleCancel}
-        isLoading={isLoading}
-      />
     </div>
   );
 }

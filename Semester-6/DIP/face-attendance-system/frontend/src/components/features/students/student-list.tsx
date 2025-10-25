@@ -1,23 +1,23 @@
 'use client';
 
 import { Student } from '@/types/student';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 interface StudentListProps {
   students: Student[];
   onEdit: (student: Student) => void;
-  onDelete: (student: Student) => void;
-  isLoading?: boolean;
+  onDelete: (studentId: number) => void;
+  loading?: boolean;
 }
 
 export const StudentList: React.FC<StudentListProps> = ({
   students,
   onEdit,
   onDelete,
-  isLoading = false,
+  loading = false,
 }) => {
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
@@ -41,7 +41,7 @@ export const StudentList: React.FC<StudentListProps> = ({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Students Found</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No students found</h3>
           <p className="text-gray-500">Get started by registering your first student.</p>
         </CardContent>
       </Card>
@@ -73,27 +73,26 @@ export const StudentList: React.FC<StudentListProps> = ({
                     <span className="font-medium">Class:</span> {student.class || 'N/A'}
                   </div>
                   <div>
-                    <span className="font-medium">Registered:</span> 
-                    {new Date(student.registration_date).toLocaleDateString()}
+                    <span className="font-medium">Registered:</span> {new Date(student.registration_date).toLocaleDateString()}
                   </div>
                   <div>
                     <span className="font-medium">Images:</span> {student.image_paths.length}
                   </div>
                 </div>
               </div>
-              
               <div className="flex space-x-2 ml-4">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => onEdit(student)}
+                  className="text-blue-600 border-blue-200 hover:bg-blue-50"
                 >
                   Edit
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => onDelete(student)}
+                  onClick={() => onDelete(student.id)}
                   className="text-red-600 border-red-200 hover:bg-red-50"
                 >
                   Delete

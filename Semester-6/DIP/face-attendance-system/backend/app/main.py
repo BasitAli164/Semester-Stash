@@ -17,35 +17,41 @@ def create_app(config_name='default'):
     
     # Initialize extensions with proper CORS configuration
     CORS(app, 
-         origins=["http://localhost:3000", "http://127.0.0.1:3000"], 
+         origins=["http://localhost:3000"], 
          supports_credentials=True,
-         allow_headers=["Content-Type", "Authorization", "Access-Control-Allow-Credentials"],
-         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+         allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
+         expose_headers=["Content-Range", "X-Content-Range"]
+    )
     
     JWTManager(app)
     
     # Ensure required folders exist
     ensure_folders_exist()
     
-    # Register blueprints (NO TRAILING SLASHES in url_prefix)
+    # Register blueprints
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(students_bp, url_prefix='/api/students')
     app.register_blueprint(attendance_bp, url_prefix='/api/attendance')
     app.register_blueprint(recognition_bp, url_prefix='/api/recognition')
     
+    # Handle OPTIONS requests for all routes
+    @app.before_request
+    def handle_options():
+        from flask import request
+        if request.method == 'OPTIONS':
+            response = app.make_default_options_response()
+            headers = response.headers
+            headers['Access-Control-Allow-Origin'] = 'http://localhost:3000'
+            headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+            headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
+            headers['Access-Control-Allow-Credentials'] = 'true'
+            return response
+
     # Health check endpoint
     @app.route('/api/health')
     def health_check():
         return {'status': 'healthy', 'message': 'Face Attendance API is running'}
-    
-    # Test endpoint
-    @app.route('/api/test')
-    def test_endpoint():
-        return {
-            'status': 'backend is working', 
-            'timestamp': '2024-01-01T00:00:00Z',
-            'cors': 'enabled'
-        }
     
     # Error handlers
     @app.errorhandler(404)
@@ -56,17 +62,13 @@ def create_app(config_name='default'):
     def internal_error(error):
         return {'error': 'Internal server error'}, 500
     
-    
-    
     print("✅ Face Attendance Backend initialized successfully!")
     print("📊 Available endpoints:")
-    print("   - GET    /api/health")
-    print("   - GET    /api/test")
     print("   - POST   /api/auth/login")
     print("   - GET    /api/auth/me")
     print("   - POST   /api/auth/logout")
-    print("   - GET    /api/students")
-    print("   - POST   /api/students")
+    print("   - GET    /api/students/")
+    print("   - POST   /api/students/")
     print("   - GET    /api/attendance/today")
     print("   - POST   /api/attendance/mark")
     print("   - POST   /api/recognition/detect")

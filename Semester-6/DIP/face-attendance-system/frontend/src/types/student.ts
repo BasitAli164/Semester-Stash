@@ -8,14 +8,24 @@ export interface Student {
   has_face_embedding: boolean;
 }
 
-export interface StudentFormData {
+export interface CreateStudentData {
   name: string;
   student_id: string;
   class: string;
   images: File[];
 }
 
+export interface UpdateStudentData {
+  name?: string;
+  class?: string;
+  student_id?: string; // Add this for completeness
+}
+
 export interface StudentsResponse {
   students: Student[];
   count: number;
+}
+
+export interface StudentResponse {
+  student: Student;
 }

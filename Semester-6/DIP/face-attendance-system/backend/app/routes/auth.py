@@ -9,6 +9,10 @@ auth_bp = Blueprint('auth', __name__)
 def login():
     """User login endpoint"""
     try:
+        # Handle CORS preflight
+        if request.method == 'OPTIONS':
+            return jsonify({'status': 'ok'}), 200
+            
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No data provided'}), 400
@@ -28,6 +32,7 @@ def login():
         print(f"User found: {user is not None}")
         
         if user and user.check_password(password):
+            # Ensure identity is properly handled as string
             token = create_token(identity=user.id)
             response_data = {
                 'message': 'Login successful',

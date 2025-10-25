@@ -1,56 +1,46 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Student, StudentFormData } from '@/types/student';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { ImageUpload } from './image-upload';
+import { CreateStudentData } from '@/types/student';
 
 interface StudentFormProps {
-  student?: Student; // For edit mode
-  onSubmit: (data: StudentFormData) => Promise<void>;
-  onCancel: () => void;
-  isLoading?: boolean;
+  onSubmit: (data: CreateStudentData) => Promise<void>;
+  loading?: boolean;
+  initialData?: {
+    name?: string;
+    student_id?: string;
+    class?: string;
+  };
 }
 
 export const StudentForm: React.FC<StudentFormProps> = ({
-  student,
   onSubmit,
-  onCancel,
-  isLoading = false,
+  loading = false,
+  initialData,
 }) => {
   const [formData, setFormData] = useState({
-    name: student?.name || '',
-    student_id: student?.student_id || '',
-    class: student?.class || '',
+    name: initialData?.name || '',
+    student_id: initialData?.student_id || '',
+    class: initialData?.class || '',
   });
   const [images, setImages] = useState<File[]>([]);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
-    }
-
-    if (!formData.student_id.trim()) {
-      newErrors.student_id = 'Student ID is required';
-    }
-
-    if (!student && images.length === 0) {
-      newErrors.images = 'At least one image is required';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
+    setError('');
+
+    if (!formData.name || !formData.student_id) {
+      setError('Name and Student ID are required');
+      return;
+    }
+
+    if (images.length === 0) {
+      setError('At least one image is required');
       return;
     }
 
@@ -59,104 +49,91 @@ export const StudentForm: React.FC<StudentFormProps> = ({
         ...formData,
         images,
       });
-    } catch (error) {
-      // Error handling is done in the parent component
+    } catch (err: any) {
+      setError(err.message);
     }
   };
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
-  };
-
-  const handleImagesChange = (files: File[]) => {
-    setImages(files);
-    if (errors.images) {
-      setErrors(prev => ({ ...prev, images: '' }));
-    }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
   };
 
   return (
-    <Card>
+    <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
-        <h2 className="text-xl font-semibold">
-          {student ? 'Edit Student' : 'Register New Student'}
+        <h2 className="text-2xl font-bold text-center text-gray-900">
+          Register New Student
         </h2>
       </CardHeader>
+      
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Input
-              label="Full Name"
-              value={formData.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
-              error={errors.name}
-              placeholder="Enter student's full name"
-              required
-              disabled={isLoading}
-            />
-
-            <Input
-              label="Student ID"
-              value={formData.student_id}
-              onChange={(e) => handleInputChange('student_id', e.target.value)}
-              error={errors.student_id}
-              placeholder="Enter student ID"
-              required
-              disabled={isLoading || !!student} // Disable editing student_id in edit mode
-            />
-
-            <Input
-              label="Class"
-              value={formData.class}
-              onChange={(e) => handleInputChange('class', e.target.value)}
-              error={errors.class}
-              placeholder="Enter class name"
-              disabled={isLoading}
-            />
-          </div>
-
-          {!student && (
-            <ImageUpload
-              onImagesChange={handleImagesChange}
-              maxImages={5}
-            />
-          )}
-
-          {errors.images && (
-            <p className="text-sm text-red-600">{errors.images}</p>
-          )}
-
-          {student && (
-            <div className="p-4 bg-blue-50 rounded-md">
-              <p className="text-sm text-blue-700">
-                <strong>Note:</strong> To update face recognition data, you'll need to 
-                re-register the student with new images.
-              </p>
+          {error && (
+            <div className="p-3 text-sm text-red-700 bg-red-100 rounded-md">
+              {error}
             </div>
           )}
-
-          <div className="flex justify-end space-x-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onCancel}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              isLoading={isLoading}
-              disabled={isLoading}
-            >
-              {student ? 'Update Student' : 'Register Student'}
-            </Button>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label="Full Name *"
+              name="name"
+              type="text"
+              placeholder="Enter student's full name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+              disabled={loading}
+            />
+            
+            <Input
+              label="Student ID *"
+              name="student_id"
+              type="text"
+              placeholder="Enter student ID"
+              value={formData.student_id}
+              onChange={handleChange}
+              required
+              disabled={loading}
+            />
           </div>
+
+          <Input
+            label="Class/Group"
+            name="class"
+            type="text"
+            placeholder="Enter class or group name"
+            value={formData.class}
+            onChange={handleChange}
+            disabled={loading}
+          />
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Student Images *
+            </label>
+            <ImageUpload
+              onImagesChange={setImages}
+              maxImages={5}
+            />
+            <p className="text-sm text-gray-500 mt-2">
+              Upload clear face images for better recognition accuracy
+            </p>
+          </div>
+          
+          <Button
+            type="submit"
+            variant="primary"
+            size="lg"
+            isLoading={loading}
+            disabled={loading}
+            className="w-full"
+          >
+            Register Student
+          </Button>
         </form>
       </CardContent>
     </Card>

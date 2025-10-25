@@ -1,40 +1,50 @@
 import { apiClient } from './client';
-import { Student, StudentFormData, StudentsResponse } from '@/types/student';
+import { Student, CreateStudentData, UpdateStudentData, StudentsResponse, StudentResponse } from '@/types/student';
 
 export const studentsApi = {
-  async getAllStudents(): Promise<StudentsResponse> {
-    const response = await apiClient.get<StudentsResponse>('/students');
+  async getAll(): Promise<StudentsResponse> {
+    const response = await apiClient.get<StudentsResponse>('/students/'); // Add trailing slash
     return response.data;
   },
 
-  async getStudentById(id: number): Promise<{ student: Student }> {
-    const response = await apiClient.get<{ student: Student }>(`/students/${id}`);
+  async getById(studentId: number): Promise<StudentResponse> {
+    const response = await apiClient.get<StudentResponse>(`/students/${studentId}`);
     return response.data;
   },
 
-  async registerStudent(formData: FormData): Promise<{ message: string; student: Student }> {
-    const response = await apiClient.post<{ message: string; student: Student }>(
-      '/students',
-      formData
-      // Remove the headers object - let axios handle FormData automatically
-    );
+  async create(studentData: CreateStudentData): Promise<StudentResponse> {
+    const formData = new FormData();
+    formData.append('name', studentData.name);
+    formData.append('student_id', studentData.student_id);
+    formData.append('class', studentData.class || '');
+    
+    // Append each image file
+    studentData.images.forEach((image) => {
+      formData.append('images', image);
+    });
+
+    const response = await apiClient.post<StudentResponse>('/students/', formData, { // Add trailing slash
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      timeout: 30000,
+    });
     return response.data;
   },
 
-  async updateStudent(id: number, data: { name?: string; class?: string }): Promise<{ message: string; student: Student }> {
-    const response = await apiClient.put<{ message: string; student: Student }>(
-      `/students/${id}`,
-      data
-    );
+
+async update(studentId: number, studentData: UpdateStudentData): Promise<StudentResponse> {
+    const response = await apiClient.put<StudentResponse>(`/students/${studentId}`, studentData);
     return response.data;
   },
 
-  async deleteStudent(id: number): Promise<{ message: string }> {
-    const response = await apiClient.delete<{ message: string }>(`/students/${id}`);
+
+  async delete(studentId: number): Promise<{ message: string }> {
+    const response = await apiClient.delete<{ message: string }>(`/students/${studentId}`);
     return response.data;
   },
 
-  async getEmbeddings(): Promise<{ embeddings: any; count: number }> {
+  async getEmbeddings(): Promise<any> {
     const response = await apiClient.get('/students/embeddings');
     return response.data;
   },

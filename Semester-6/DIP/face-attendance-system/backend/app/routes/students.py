@@ -10,9 +10,9 @@ from app.config import Config
 
 students_bp = Blueprint('students', __name__)
 
-@students_bp.route('', methods=['GET'])  # REMOVED TRAILING SLASH
+@students_bp.route('/', methods=['GET'])
 @jwt_required
-def get_students():
+def get_all_students():  # Remove the 'path' parameter
     """Get all students"""
     try:
         conn = db_service.get_connection()
@@ -29,26 +29,7 @@ def get_students():
     except Exception as e:
         return jsonify({'error': f'Failed to get students: {str(e)}'}), 500
 
-@students_bp.route('/<int:student_id>', methods=['GET'])
-@jwt_required
-def get_student(student_id):
-    """Get student by ID"""
-    try:
-        conn = db_service.get_connection()
-        cursor = conn.cursor()
-        
-        student = Student.find_by_id(student_id, cursor)
-        conn.close()
-        
-        if student:
-            return jsonify({'student': student.to_dict()}), 200
-        else:
-            return jsonify({'error': 'Student not found'}), 404
-            
-    except Exception as e:
-        return jsonify({'error': f'Failed to get student: {str(e)}'}), 500
-
-@students_bp.route('', methods=['POST'])  # REMOVED TRAILING SLASH
+@students_bp.route('/', methods=['POST'])
 @jwt_required
 def register_student():
     """Register a new student"""
@@ -129,9 +110,28 @@ def register_student():
                 cleanup_file(file_path)
         return jsonify({'error': f'Failed to register student: {str(e)}'}), 500
 
+@students_bp.route('/<int:student_id>', methods=['GET'])
+@jwt_required
+def get_student_by_id(student_id):
+    """Get student by ID"""
+    try:
+        conn = db_service.get_connection()
+        cursor = conn.cursor()
+        
+        student = Student.find_by_id(student_id, cursor)
+        conn.close()
+        
+        if student:
+            return jsonify({'student': student.to_dict()}), 200
+        else:
+            return jsonify({'error': 'Student not found'}), 404
+            
+    except Exception as e:
+        return jsonify({'error': f'Failed to get student: {str(e)}'}), 500
+
 @students_bp.route('/<int:student_id>', methods=['PUT'])
 @jwt_required
-def update_student(student_id):
+def update_student_info(student_id):
     """Update student information"""
     try:
         data = request.get_json()
@@ -165,7 +165,7 @@ def update_student(student_id):
 
 @students_bp.route('/<int:student_id>', methods=['DELETE'])
 @jwt_required
-def delete_student(student_id):
+def delete_student_record(student_id):
     """Delete student"""
     try:
         conn = db_service.get_connection()
@@ -190,7 +190,7 @@ def delete_student(student_id):
 
 @students_bp.route('/embeddings', methods=['GET'])
 @jwt_required
-def get_embeddings():
+def get_student_embeddings():
     """Get all student embeddings for recognition"""
     try:
         conn = db_service.get_connection()
@@ -215,29 +215,3 @@ def get_embeddings():
         
     except Exception as e:
         return jsonify({'error': f'Failed to get embeddings: {str(e)}'}), 500
-@students_bp.route('', methods=['GET'])
-@jwt_required
-def get_students():
-    """Get all students"""
-    try:
-        print("🔐 GET /students endpoint called - JWT verified")
-        
-        # Debug: Print headers
-        auth_header = request.headers.get('Authorization')
-        print(f"📨 Authorization header received: {auth_header}")
-        
-        conn = db_service.get_connection()
-        cursor = conn.cursor()
-        
-        students = Student.get_all(cursor)
-        conn.close()
-        
-        print(f"✅ Returning {len(students)} students")
-        return jsonify({
-            'students': [student.to_dict() for student in students],
-            'count': len(students)
-        }), 200
-        
-    except Exception as e:
-        print(f"❌ Error in get_students: {str(e)}")
-        return jsonify({'error': f'Failed to get students: {str(e)}'}), 500
