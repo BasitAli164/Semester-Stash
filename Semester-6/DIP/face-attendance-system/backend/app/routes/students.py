@@ -215,3 +215,29 @@ def get_embeddings():
         
     except Exception as e:
         return jsonify({'error': f'Failed to get embeddings: {str(e)}'}), 500
+@students_bp.route('', methods=['GET'])
+@jwt_required
+def get_students():
+    """Get all students"""
+    try:
+        print("🔐 GET /students endpoint called - JWT verified")
+        
+        # Debug: Print headers
+        auth_header = request.headers.get('Authorization')
+        print(f"📨 Authorization header received: {auth_header}")
+        
+        conn = db_service.get_connection()
+        cursor = conn.cursor()
+        
+        students = Student.get_all(cursor)
+        conn.close()
+        
+        print(f"✅ Returning {len(students)} students")
+        return jsonify({
+            'students': [student.to_dict() for student in students],
+            'count': len(students)
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Error in get_students: {str(e)}")
+        return jsonify({'error': f'Failed to get students: {str(e)}'}), 500

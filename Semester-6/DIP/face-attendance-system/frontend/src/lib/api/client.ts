@@ -16,19 +16,18 @@ apiClient.interceptors.request.use(
   (config) => {
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('auth_token');
+      console.log('🔐 Token from localStorage:', token ? 'Present' : 'Missing');
+      
       if (token) {
-        // For FormData requests, we need to set Authorization header manually
-        // and remove Content-Type to let browser set it with boundary
-        if (config.data instanceof FormData) {
-          config.headers.Authorization = `Bearer ${token}`;
-          delete config.headers['Content-Type']; // Let browser set it
-        } else {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
+        config.headers.Authorization = `Bearer ${token}`;
+        console.log('✅ Authorization header set:', config.headers.Authorization);
+      } else {
+        console.log('❌ No token found in localStorage');
       }
     }
     
     console.log(`🔄 API Call: ${config.method?.toUpperCase()} ${config.url}`);
+    console.log('📨 Request headers:', config.headers);
     return config;
   },
   (error) => {
@@ -49,15 +48,21 @@ apiClient.interceptors.response.use(
       method: error.config?.method,
       status: error.response?.status,
       message: error.message,
-      responseData: error.response?.data
+      responseData: error.response?.data,
+      requestHeaders: error.config?.headers
     });
+    
+    if (error.response?.status === 401) {
+      console.error('🔐 401 Unauthorized - Token issue detected');
+      console.log('📋 Response headers:', error.response?.headers);
+      console.log('📋 Request headers that were sent:', error.config?.headers);
+    }
     
     if (error.code === 'NETWORK_ERROR' || error.message === 'Network Error') {
       console.error('🌐 Network Error: Backend might be down or CORS issue');
     }
     
     if (error.response?.status === 401) {
-      console.error('🔐 Unauthorized: Token might be invalid or missing');
       // Token expired or invalid
       if (typeof window !== 'undefined') {
         localStorage.removeItem('auth_token');
@@ -69,11 +74,6 @@ apiClient.interceptors.response.use(
       }
     }
     
-    // Return a consistent error format
-    return Promise.reject({
-      message: error.response?.data?.error || error.message || 'Network error',
-      status: error.response?.status,
-      code: error.code
-    });
+    return Promise.reject(error);
   }
 );

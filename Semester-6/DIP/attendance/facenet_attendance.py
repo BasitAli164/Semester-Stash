@@ -1,7 +1,7 @@
 import os
 import json
 import cv2
-import torch
+# import torch
 import sqlite3
 import numpy as np
 from facenet_pytorch import MTCNN, InceptionResnetV1

@@ -56,6 +56,8 @@ def create_app(config_name='default'):
     def internal_error(error):
         return {'error': 'Internal server error'}, 500
     
+    
+    
     print("✅ Face Attendance Backend initialized successfully!")
     print("📊 Available endpoints:")
     print("   - GET    /api/health")

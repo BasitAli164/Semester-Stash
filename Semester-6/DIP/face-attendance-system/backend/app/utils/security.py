@@ -12,9 +12,13 @@ def jwt_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         try:
+            print("🔐 JWT Middleware: Verifying token...")
             verify_jwt_in_request()
+            user_id = get_jwt_identity()
+            print(f"✅ JWT Valid - User ID: {user_id}")
             return fn(*args, **kwargs)
         except Exception as e:
+            print(f"❌ JWT Invalid: {str(e)}")
             return {'error': 'Invalid or expired token'}, 401
     return wrapper
 
@@ -22,6 +26,8 @@ def get_current_user(cursor):
     """Get current user from JWT token"""
     try:
         user_id = get_jwt_identity()
+        print(f"🔍 Getting current user for ID: {user_id}")
         return User.find_by_id(user_id, cursor)
-    except:
+    except Exception as e:
+        print(f"❌ Error getting current user: {str(e)}")
         return None
