@@ -132,12 +132,20 @@ class Student:
     
     def to_dict(self):
         """Convert to dictionary"""
+        # Handle datetime conversion safely
+        registration_date = None
+        if self.registration_date:
+            if isinstance(self.registration_date, datetime):
+                registration_date = self.registration_date.isoformat()
+            else:
+                registration_date = self.registration_date
+        
         return {
             'id': self.id,
             'name': self.name,
             'student_id': self.student_id,
             'class': self.class_name,
-            'registration_date': self.registration_date.isoformat() if self.registration_date else None,
+            'registration_date': registration_date,
             'image_paths': self.image_paths,
             'has_face_embedding': self.face_embedding is not None
         }

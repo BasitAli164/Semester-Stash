@@ -103,11 +103,19 @@ class Attendance:
     
     def to_dict(self):
         """Convert to dictionary"""
+        # Handle datetime conversion safely
+        timestamp = None
+        if self.timestamp:
+            if isinstance(self.timestamp, datetime):
+                timestamp = self.timestamp.isoformat()
+            else:
+                timestamp = self.timestamp
+        
         return {
             'id': self.id,
             'student_id': self.student_id,
             'name': self.name,
             'class': self.class_name,
-            'timestamp': self.timestamp.isoformat() if isinstance(self.timestamp, datetime) else self.timestamp,
+            'timestamp': timestamp,
             'status': self.status
         }

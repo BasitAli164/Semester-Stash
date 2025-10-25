@@ -16,6 +16,8 @@ def login():
         username = data.get('username')
         password = data.get('password')
         
+        print(f"Login attempt: username={username}")
+        
         if not username or not password:
             return jsonify({'error': 'Username and password required'}), 400
         
@@ -23,19 +25,27 @@ def login():
         cursor = conn.cursor()
         
         user = User.find_by_username(username, cursor)
-        conn.close()
+        print(f"User found: {user is not None}")
         
         if user and user.check_password(password):
             token = create_token(identity=user.id)
-            return jsonify({
+            response_data = {
                 'message': 'Login successful',
                 'token': token,
                 'user': user.to_dict()
-            }), 200
+            }
+            print(f"Login successful for user: {username}")
+            conn.close()
+            return jsonify(response_data), 200
         else:
+            conn.close()
+            print("Invalid credentials")
             return jsonify({'error': 'Invalid username or password'}), 401
             
     except Exception as e:
+        print(f"Login error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': f'Login failed: {str(e)}'}), 500
 
 @auth_bp.route('/me', methods=['GET'])

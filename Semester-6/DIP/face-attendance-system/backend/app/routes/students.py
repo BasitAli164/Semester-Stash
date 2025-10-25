@@ -10,7 +10,7 @@ from app.config import Config
 
 students_bp = Blueprint('students', __name__)
 
-@students_bp.route('/', methods=['GET'])
+@students_bp.route('', methods=['GET'])  # REMOVED TRAILING SLASH
 @jwt_required
 def get_students():
     """Get all students"""
@@ -48,7 +48,7 @@ def get_student(student_id):
     except Exception as e:
         return jsonify({'error': f'Failed to get student: {str(e)}'}), 500
 
-@students_bp.route('/', methods=['POST'])
+@students_bp.route('', methods=['POST'])  # REMOVED TRAILING SLASH
 @jwt_required
 def register_student():
     """Register a new student"""

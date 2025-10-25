@@ -10,7 +10,15 @@ class User:
         self.username = username
         self.email = email
         self.password_hash = password_hash
-        self.created_at = created_at or datetime.utcnow()
+        
+        # Handle created_at conversion from string to datetime if needed
+        if isinstance(created_at, str):
+            try:
+                self.created_at = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+            except (ValueError, AttributeError):
+                self.created_at = datetime.utcnow()
+        else:
+            self.created_at = created_at or datetime.utcnow()
     
     def set_password(self, password):
         """Set hashed password"""
@@ -44,7 +52,7 @@ class User:
                 username=user_data[1],
                 email=user_data[2],
                 password_hash=user_data[3],
-                created_at=user_data[4]
+                created_at=user_data[4]  # This might be a string from SQLite
             )
         return None
     
@@ -59,7 +67,7 @@ class User:
                 username=user_data[1],
                 email=user_data[2],
                 password_hash=user_data[3],
-                created_at=user_data[4]
+                created_at=user_data[4]  # This might be a string from SQLite
             )
         return None
     
@@ -80,10 +88,20 @@ class User:
         conn.commit()
     
     def to_dict(self):
-        """Convert to dictionary"""
+        """Convert to dictionary - FIXED VERSION"""
         return {
             'id': self.id,
             'username': self.username,
             'email': self.email,
-            'created_at': self.created_at.isoformat() if self.created_at else None
+            'created_at': self._format_datetime(self.created_at)
         }
+    
+    def _format_datetime(self, dt):
+        """Safely format datetime for JSON serialization"""
+        if isinstance(dt, datetime):
+            return dt.isoformat()
+        elif isinstance(dt, str):
+            # If it's already a string, return as-is (might be from SQLite)
+            return dt
+        else:
+            return None
